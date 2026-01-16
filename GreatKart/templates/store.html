@@ -1,0 +1,155 @@
+{% extends 'base_template.html' %}
+
+{% block content %}
+
+<!-- ========================= SECTION PAGETOP ========================= -->
+<section class="section-pagetop bg">
+	<div class="container">
+		<h2 class="title-page">Our Store</h2>
+	</div>
+</section>
+<!-- ========================= SECTION PAGETOP END ========================= -->
+
+<!-- ========================= SECTION CONTENT ========================= -->
+<section class="section-content padding-y">
+<div class="container">
+
+<div class="row">
+
+	<!-- ================= SIDEBAR ================= -->
+	<aside class="col-md-3">
+		<div class="card">
+
+			<article class="filter-group">
+				<header class="card-header">
+					<a href="#" data-toggle="collapse" data-target="#collapse_1">
+						<i class="icon-control fa fa-chevron-down"></i>
+						<h6 class="title">Categories</h6>
+					</a>
+				</header>
+				<div class="filter-content collapse show" id="collapse_1">
+					<div class="card-body">
+						<ul class="list-menu">
+							{% for category in categories %}
+							<li><a href="{% url 'products_by_category' category.slug %}">{{ category.name }}</a></li>
+							{% endfor %}
+						</ul>
+					</div>
+				</div>
+			</article>
+
+			<article class="filter-group">
+				<header class="card-header">
+					<a href="#" data-toggle="collapse" data-target="#collapse_4">
+						<i class="icon-control fa fa-chevron-down"></i>
+						<h6 class="title">Sizes</h6>
+					</a>
+				</header>
+				<div class="filter-content collapse show" id="collapse_4">
+					<div class="card-body">
+						<label class="checkbox-btn"><input type="checkbox"><span class="btn btn-light">XS</span></label>
+						<label class="checkbox-btn"><input type="checkbox"><span class="btn btn-light">SM</span></label>
+						<label class="checkbox-btn"><input type="checkbox"><span class="btn btn-light">LG</span></label>
+						<label class="checkbox-btn"><input type="checkbox"><span class="btn btn-light">XXL</span></label>
+					</div>
+				</div>
+			</article>
+
+			<article class="filter-group">
+				<header class="card-header">
+					<a href="#" data-toggle="collapse" data-target="#collapse_3">
+						<i class="icon-control fa fa-chevron-down"></i>
+						<h6 class="title">Price range</h6>
+					</a>
+				</header>
+				<div class="filter-content collapse show" id="collapse_3">
+					<div class="card-body">
+						<div class="form-row">
+							<div class="form-group col-md-6">
+								<label>Min</label>
+								<select class="form-control">
+									<option>$0</option>
+									<option>$50</option>
+									<option>$100</option>
+									<option>$150</option>
+									<option>$200</option>
+									<option>$500</option>
+								</select>
+							</div>
+							<div class="form-group col-md-6 text-right">
+								<label>Max</label>
+								<select class="form-control">
+									<option>$50</option>
+									<option>$100</option>
+									<option>$150</option>
+									<option>$200</option>
+									<option>$500</option>
+									<option>$1000</option>
+								</select>
+							</div>
+						</div>
+						<button class="btn btn-block btn-primary">Apply</button>
+					</div>
+				</div>
+			</article>
+
+		</div>
+	</aside>
+	<!-- ================= SIDEBAR END ================= -->
+
+	<!-- ================= PRODUCTS ================= -->
+	<main class="col-md-9">
+
+	<header class="border-bottom mb-4 pb-3">
+		<span class="mr-md-auto">{{ product_count }} Items found</span>
+	</header>
+
+	<div class="row">
+
+		{% for product in products %}
+		<div class="col-md-4">
+			<figure class="card card-product-grid">
+				<div class="img-wrap">
+					<img src="{{ product.image.url }}">
+				</div>
+				<figcaption class="info-wrap">
+					<div class="fix-height">
+						<a href="{% url 'product_detail' product.category.slug product.slug %}" class="title stretched-link">
+							{{ product.product_name }}
+						</a>
+						<div class="price-wrap mt-2">
+							<span class="price">₹{{ product.price }}</span>
+						</div>
+					</div>
+					{% if product.stock <= 0 %}
+						<a href="/place-order" class="btn btn-block btn-danger disabled">Out of Stock</a>
+					{% else %}
+						<a href="/place-order" class="btn btn-block btn-primary">Add to cart</a>
+					{% endif %}
+				</figcaption>
+			</figure>
+		</div>
+		{% endfor %}
+
+	</div>
+
+	<nav class="mt-4">
+		<ul class="pagination">
+			<li class="page-item disabled"><a class="page-link">Previous</a></li>
+			<li class="page-item active"><a class="page-link">1</a></li>
+			<li class="page-item"><a class="page-link">2</a></li>
+			<li class="page-item"><a class="page-link">3</a></li>
+			<li class="page-item"><a class="page-link">Next</a></li>
+		</ul>
+	</nav>
+
+	</main>
+	<!-- ================= PRODUCTS END ================= -->
+
+</div>
+
+</div>
+</section>
+<!-- ========================= SECTION CONTENT END ========================= -->
+
+{% endblock %}

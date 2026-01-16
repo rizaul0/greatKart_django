@@ -1,0 +1,219 @@
+{% extends 'base_template.html' %}
+
+{% block content %}
+
+<section class="section-content padding-y bg">
+<div class="container">
+
+<div class="row">
+<main class="col-md-8">
+
+<!-- ============================ REVIEW CART ============================ -->
+<article class="card mb-4">
+<div class="card-body">
+	<h4 class="card-title mb-4">Review cart</h4>
+
+	<div class="row">
+		<div class="col-md-6">
+			<figure class="itemside mb-4">
+				<div class="aside">
+					<img src="/static/images/items/1.jpg" class="border img-sm">
+				</div>
+				<figcaption class="info">
+					<p>Apple iPad (2019) 32Gb Wi-Fi gold</p>
+					<span class="text-muted">2x = $560</span>
+				</figcaption>
+			</figure>
+		</div>
+
+		<div class="col-md-6">
+			<figure class="itemside mb-4">
+				<div class="aside">
+					<img src="/static/images/items/2.jpg" class="border img-sm">
+				</div>
+				<figcaption class="info">
+					<p>Apple iPad (2019) 32Gb Wi-Fi gold</p>
+					<span class="text-muted">2x = $560</span>
+				</figcaption>
+			</figure>
+		</div>
+
+		<div class="col-md-6">
+			<figure class="itemside mb-4">
+				<div class="aside">
+					<img src="/static/images/items/3.jpg" class="border img-sm">
+				</div>
+				<figcaption class="info">
+					<p>Apple iPad (2019) 32Gb Wi-Fi gold</p>
+					<span class="text-muted">2x = $560</span>
+				</figcaption>
+			</figure>
+		</div>
+
+		<div class="col-md-6">
+			<figure class="itemside mb-4">
+				<div class="aside">
+					<img src="/static/images/items/4.jpg" class="border img-sm">
+				</div>
+				<figcaption class="info">
+					<p>Apple iPad (2019) 32Gb Wi-Fi gold</p>
+					<span class="text-muted">2x = $560</span>
+				</figcaption>
+			</figure>
+		</div>
+	</div>
+</div>
+</article>
+<!-- ============================ REVIEW CART END ============================ -->
+
+<!-- ============================ CONTACT INFO ============================ -->
+<article class="card mb-4">
+<div class="card-body">
+	<h4 class="card-title mb-4">Contact info</h4>
+	<form>
+		<div class="row">
+			<div class="form-group col-sm-6">
+				<label>First name</label>
+				<input type="text" class="form-control" placeholder="Type here">
+			</div>
+			<div class="form-group col-sm-6">
+				<label>Last name</label>
+				<input type="text" class="form-control" placeholder="Type here">
+			</div>
+			<div class="form-group col-sm-6">
+				<label>Phone</label>
+				<input type="text" class="form-control" value="+91">
+			</div>
+			<div class="form-group col-sm-6">
+				<label>Email</label>
+				<input type="email" class="form-control" placeholder="example@gmail.com">
+			</div>
+		</div>
+	</form>
+</div>
+</article>
+
+<!-- ============================ DELIVERY INFO ============================ -->
+<article class="card mb-4">
+<div class="card-body">
+	<h4 class="card-title mb-4">Delivery info</h4>
+	<form>
+		<div class="row">
+			<div class="form-group col-sm-6">
+				<label>Country</label>
+				<select class="form-control">
+					<option>India</option>
+					<option>United States</option>
+					<option>France</option>
+					<option>Italy</option>
+				</select>
+			</div>
+			<div class="form-group col-sm-6">
+				<label>State</label>
+				<input type="text" class="form-control">
+			</div>
+			<div class="form-group col-sm-8">
+				<label>Street</label>
+				<input type="text" class="form-control">
+			</div>
+			<div class="form-group col-sm-4">
+				<label>Building</label>
+				<input type="text" class="form-control">
+			</div>
+			<div class="form-group col-sm-4">
+				<label>House</label>
+				<input type="text" class="form-control">
+			</div>
+			<div class="form-group col-sm-4">
+				<label>Postal code</label>
+				<input type="text" class="form-control">
+			</div>
+			<div class="form-group col-sm-4">
+				<label>Zip</label>
+				<input type="text" class="form-control">
+			</div>
+		</div>
+	</form>
+</div>
+</article>
+
+<!-- ============================ PAYMENT ============================ -->
+<article class="accordion" id="accordion_pay">
+
+<div class="card">
+	<header class="card-header">
+		<img src="/static/images/misc/payment-paypal.png" class="float-right" height="24">
+		<label class="form-check collapsed" data-toggle="collapse" data-target="#pay_paypal">
+			<input class="form-check-input" checked type="radio">
+			<h6 class="form-check-label">Paypal</h6>
+		</label>
+	</header>
+
+	<div id="pay_paypal" class="collapse show" data-parent="#accordion_pay">
+	<div class="card-body text-center">
+		<p class="text-muted">
+			You’ll be redirected to PayPal to complete payment.
+		</p>
+		<img src="/static/images/misc/btn-paypal.png" height="32">
+	</div>
+	</div>
+</div>
+
+<div class="card">
+	<header class="card-header">
+		<img src="/static/images/misc/payment-card.png" class="float-right" height="24">
+		<label class="form-check" data-toggle="collapse" data-target="#pay_card">
+			<input class="form-check-input" type="radio">
+			<h6 class="form-check-label">Credit Card</h6>
+		</label>
+	</header>
+
+	<div id="pay_card" class="collapse" data-parent="#accordion_pay">
+	<div class="card-body">
+		<form class="form-inline">
+			<input class="form-control mr-2" placeholder="xxxx-xxxx-xxxx-xxxx">
+			<input class="form-control mr-2" style="width:100px" placeholder="MM/YY">
+			<input class="form-control mr-2" style="width:80px" placeholder="CVC">
+			<button class="btn btn-success">Pay</button>
+		</form>
+	</div>
+	</div>
+</div>
+
+</article>
+
+</main>
+
+<!-- ============================ SUMMARY ============================ -->
+<aside class="col-md-4">
+<div class="card">
+<div class="card-body">
+	<dl class="dlist-align">
+		<dt>Total price:</dt>
+		<dd class="text-right">$69.97</dd>
+	</dl>
+	<dl class="dlist-align">
+		<dt>Tax:</dt>
+		<dd class="text-right">$10.00</dd>
+	</dl>
+	<dl class="dlist-align">
+		<dt>Total:</dt>
+		<dd class="text-right text-dark"><strong>$59.97</strong></dd>
+	</dl>
+
+	<hr>
+
+	<p class="text-center">
+		<img src="/static/images/misc/payments.png" height="26">
+	</p>
+
+	<a href="/order-complete" class="btn btn-primary btn-block">Place Order</a>
+</div>
+</div>
+</aside>
+
+</div>
+</div>
+</section>
+
+{% endblock %}
