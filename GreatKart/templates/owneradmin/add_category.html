@@ -1,0 +1,52 @@
+{% extends 'base_template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title mb-4">Add Category</h4>
+
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label>Category Name</label>
+          <input type="text" name="name" id="name" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label>Slug</label>
+          <input type="text" id="slug" class="form-control" readonly>
+          <small class="text-muted">Auto-generated</small>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea name="description" class="form-control"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Category Image</label>
+          <input type="file" name="cat_image" class="form-control">
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          Add Category
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById("name").addEventListener("keyup", function () {
+    let text = this.value;
+    let slug = text.toLowerCase()
+                   .trim()
+                   .replace(/[^a-z0-9\s-]/g, "")
+                   .replace(/\s+/g, "-");
+    document.getElementById("slug").value = slug;
+});
+</script>
+{% endblock %}

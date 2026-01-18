@@ -1,0 +1,61 @@
+{% extends 'base_template.html' %}
+{% block content %}
+
+<section class="section-content padding-y">
+<div class="container">
+
+<h3>Owner Admin – Products Categories</h3>
+
+
+<table class="table table-bordered">
+<tr>
+    <th>Category</th>
+    <th>Description</th>
+    <th>Actions</th>
+</tr>
+
+
+{% for category in Categorys %}
+<tr>
+    <td>{{ category.name }}</td>
+    <td>{{ category.description }}</td>
+    <td>
+        <a href="{% url 'edit_category' category.id %}" class="btn btn-sm btn-warning">Edit</a>
+        <a href="{% url 'delete_category' category.id %}" class="btn btn-sm btn-danger">Delete</a>
+    </td>
+</tr>
+
+{% endfor %}
+<tr>
+    <td colspan="3">
+        <a href="{% url 'add_category' %}" class="btn btn-primary mb-3">Add Category</a>
+    </td>
+
+<table class="table table-bordered">
+<tr>
+    <th>Name</th>
+    <th>Price</th>
+    <th>Stock</th>
+    <th>Actions</th>
+</tr>
+<h3>Products List</h3>
+{% for product in products %}
+<tr>
+    <td>{{ product.product_name }}</td>
+    <td>₹{{ product.price }}</td>
+    <td>{{ product.stock }}</td>
+    <td>
+        <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-warning">Edit</a>
+        <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-danger">Delete</a>
+    </td>
+</tr>
+{% endfor %}
+<tr>
+    <td colspan="4">
+        <a href="{% url 'add_product' %}" class="btn btn-primary mb-3">Add Product</a>
+    </td>
+</table>
+</div>
+</section>
+
+{% endblock %}

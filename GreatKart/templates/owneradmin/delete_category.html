@@ -1,0 +1,17 @@
+{% extends 'base_template.html' %}
+{% block content %}
+<div class="container mt-5 text-center">
+  <div class="card">
+    <div class="card-body">
+      <h4>Delete Category</h4>
+      <p>Are you sure you want to delete <strong>{{ category.name }}</strong>?</p>
+
+      <form method="POST">
+        {% csrf_token %}
+        <button class="btn btn-danger">Yes, Delete</button>
+        <a href="{% url 'store' %}" class="btn btn-secondary">Cancel</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

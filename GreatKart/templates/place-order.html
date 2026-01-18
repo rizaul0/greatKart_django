@@ -12,55 +12,21 @@
 <article class="card mb-4">
 <div class="card-body">
 	<h4 class="card-title mb-4">Review cart</h4>
-
+    {% for cart_item in cart_items %}
 	<div class="row">
 		<div class="col-md-6">
 			<figure class="itemside mb-4">
 				<div class="aside">
-					<img src="/static/images/items/1.jpg" class="border img-sm">
+					<img src="{{cart_item.product.image.url}}" class="border img-sm">
 				</div>
 				<figcaption class="info">
-					<p>Apple iPad (2019) 32Gb Wi-Fi gold</p>
-					<span class="text-muted">2x = $560</span>
+					<p>{{cart_item.product.name}}</p>
+					<span class="text-muted">{{cart_item.quantity}}x = ₹{{cart_item.sub_total}}</span>
 				</figcaption>
 			</figure>
 		</div>
-
-		<div class="col-md-6">
-			<figure class="itemside mb-4">
-				<div class="aside">
-					<img src="/static/images/items/2.jpg" class="border img-sm">
-				</div>
-				<figcaption class="info">
-					<p>Apple iPad (2019) 32Gb Wi-Fi gold</p>
-					<span class="text-muted">2x = $560</span>
-				</figcaption>
-			</figure>
-		</div>
-
-		<div class="col-md-6">
-			<figure class="itemside mb-4">
-				<div class="aside">
-					<img src="/static/images/items/3.jpg" class="border img-sm">
-				</div>
-				<figcaption class="info">
-					<p>Apple iPad (2019) 32Gb Wi-Fi gold</p>
-					<span class="text-muted">2x = $560</span>
-				</figcaption>
-			</figure>
-		</div>
-
-		<div class="col-md-6">
-			<figure class="itemside mb-4">
-				<div class="aside">
-					<img src="/static/images/items/4.jpg" class="border img-sm">
-				</div>
-				<figcaption class="info">
-					<p>Apple iPad (2019) 32Gb Wi-Fi gold</p>
-					<span class="text-muted">2x = $560</span>
-				</figcaption>
-			</figure>
-		</div>
+    {% endfor %}
+		
 	</div>
 </div>
 </article>
@@ -74,11 +40,11 @@
 		<div class="row">
 			<div class="form-group col-sm-6">
 				<label>First name</label>
-				<input type="text" class="form-control" placeholder="Type here">
+				<input type="text" class="form-control" placeholder="{{ user.first_name}}" value="{{ user.first_name }}">
 			</div>
 			<div class="form-group col-sm-6">
 				<label>Last name</label>
-				<input type="text" class="form-control" placeholder="Type here">
+				<input type="text" class="form-control" placeholder="Type here" value="{{ user.last_name }}">
 			</div>
 			<div class="form-group col-sm-6">
 				<label>Phone</label>
@@ -86,7 +52,7 @@
 			</div>
 			<div class="form-group col-sm-6">
 				<label>Email</label>
-				<input type="email" class="form-control" placeholder="example@gmail.com">
+				<input type="email" class="form-control" placeholder="example@gmail.com" value="{{ user.email }}">
 			</div>
 		</div>
 	</form>
@@ -110,11 +76,11 @@
 			</div>
 			<div class="form-group col-sm-6">
 				<label>State</label>
-				<input type="text" class="form-control">
+				<input type="text" class="form-control" value="{{ user.state }}">
 			</div>
 			<div class="form-group col-sm-8">
 				<label>Street</label>
-				<input type="text" class="form-control">
+				<input type="text" class="form-control" value="{{ user.street }}">
 			</div>
 			<div class="form-group col-sm-4">
 				<label>Building</label>
@@ -190,15 +156,15 @@
 <div class="card-body">
 	<dl class="dlist-align">
 		<dt>Total price:</dt>
-		<dd class="text-right">$69.97</dd>
+		<dd class="text-right">₹{{ total_price }}</dd>
 	</dl>
 	<dl class="dlist-align">
 		<dt>Tax:</dt>
-		<dd class="text-right">$10.00</dd>
+		<dd class="text-right">₹{{ tax }}</dd>
 	</dl>
 	<dl class="dlist-align">
 		<dt>Total:</dt>
-		<dd class="text-right text-dark"><strong>$59.97</strong></dd>
+		<dd class="text-right text-dark"><strong>₹{{ grand_total }}</strong></dd>
 	</dl>
 
 	<hr>

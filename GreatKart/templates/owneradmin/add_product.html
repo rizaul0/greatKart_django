@@ -1,0 +1,71 @@
+{% extends 'base_template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card">
+    <div class="card-body">
+      <h4 class="card-title mb-4">Add Product</h4>
+
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label>Product Name</label>
+          <input type="text" name="product_name" id="product_name"
+                 class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label>Slug</label>
+          <input type="text" name="slug" id="slug"
+                 class="form-control" readonly>
+          <small class="text-muted">Auto-generated from product name</small>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea name="description" class="form-control"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Price</label>
+          <input type="number" step="0.01" name="price" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label>Stock</label>
+          <input type="number" name="stock" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label>Category</label>
+          <select name="category" class="form-control" required>
+            {% for cat in categories %}
+              <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Product Image</label>
+          <input type="file" name="image" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Add Product</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById("product_name").addEventListener("keyup", function () {
+    let text = this.value;
+    let slug = text.toLowerCase()
+                   .trim()
+                   .replace(/[^a-z0-9\s-]/g, "")
+                   .replace(/\s+/g, "-");
+    document.getElementById("slug").value = slug;
+});
+</script>
+{% endblock %}
