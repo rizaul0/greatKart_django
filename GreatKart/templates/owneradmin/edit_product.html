@@ -13,24 +13,38 @@
 
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-
+            <div class="form-group">
+                <label>Brand Name</label>
+                <input type="text" name="brand_name" id="brand_name" class="form-control"
+                       value="{{ product.brand_name }}" required>
+            </div>
             <div class="form-group">
                 <label>Product Name</label>
-                <input type="text" name="product_name" class="form-control"
+                <input type="text" name="product_name" id="product_name" class="form-control"
                        value="{{ product.product_name }}" required>
             </div>
 
             <div class="form-group">
-                <label>Slug</label>
-                <input type="text" name="slug" class="form-control"
-                       value="{{ product.slug }}" required>
-            </div>
+          <label>Slug</label>
+          <input type="text" name="slug" id="slug"
+                 class="form-control" readonly value="{{ product.slug }}">
+          <small class="text-muted">Auto-generated from product name</small>
+        </div>
 
             <div class="form-group">
                 <label>Description</label>
                 <textarea name="description" class="form-control" rows="4">{{ product.description }}</textarea>
             </div>
-
+            <div class="form-group">
+                <label>variation</label>
+                <input type="text" name="variation" class="form-control"
+                       value="{{ product.colour }}" required>
+            </div>
+             <div class="form-group">
+                <label>Sizes</label>
+                <input type="text" name="sizes" class="form-control"
+                       value="{{ product.size }}" required>
+            </div>
             <div class="form-row">
                 <div class="form-group col-md-6">
                     <label>Price</label>
@@ -83,4 +97,14 @@
 
 </div>
 </section>
+<script>
+document.getElementById("product_name").addEventListener("keyup", function () {
+    let text = this.value;
+    let slug = text.toLowerCase()
+                   .trim()
+                   .replace(/[^a-z0-9\s-]/g, "")
+                   .replace(/\s+/g, "-");
+    document.getElementById("slug").value = slug;
+});
+</script>
 {% endblock %}

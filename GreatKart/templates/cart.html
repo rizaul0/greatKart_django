@@ -11,10 +11,14 @@
 	 
 	<aside class="col-lg-9">
 		<div class="card">
+			
+			
 			<table class="table table-borderless table-shopping-cart">
 				<thead class="text-muted">
+			{% if cart_items %}
 					<tr class="small text-uppercase">
 						<th scope="col">Product</th>
+						<th scope="col">variant</th>
 						<th scope="col" width="120">Quantity</th>
 						<th scope="col" width="120">Price</th>
 						<th scope="col" class="text-right" width="200"></th>
@@ -22,7 +26,7 @@
 				</thead>
 
 				<tbody>
-			{% if cart_items %}
+			
 
 				<!-- ITEM 1 -->
                     {% for cart_item in cart_items %}
@@ -34,23 +38,49 @@
 								<img src="{{ cart_item.product.image.url }}" class="img-sm">
 							</div>
 							<figcaption class="info">
-								<a href="#" class="title text-dark">{{ cart_item.product.product_name }}</a>
-								<p class="text-muted small">{{ cart_item.product.description }} <br> {{ cart_item.product.product_name }}</p>
+								<a href="{% url 'product_detail' cart_item.product.category.slug cart_item.product.slug %}" class="title text-dark stretched-link">{{ cart_item.product.brand_name }}</a>
+								<p class="text-muted small">{{ cart_item.product.product_name }} <br> {{ cart_item.product.description }}</p>
+							</figcaption>
+						</figure>
+					</td>
+					
+					<td>
+						<figure class="itemside align-items-center">
+							
+							<figcaption class="info">
+								<a href="{% url 'product_detail' cart_item.product.category.slug cart_item.product.slug %}" class="title text-dark stretched-link">
+									{% if cart_item.variation.all %}
+                                       {% for variant in cart_item.variation.all %}
+											{{ variant.variant_value }}
+										{% endfor %}
+									{% endif %}
 							</figcaption>
 						</figure>
 					</td>
                     
 					<td>
 						<div class="input-group input-spinner">
+
 							<div class="input-group-prepend">
-								<a class="btn btn-light" type="button" href="{% url 'remove_cart_item' cart_item.product.id %}"><i class="fa fa-minus"></i></a>
+							<a class="btn btn-light"
+								href="{% url 'remove_cart_item' cart_item.id %}">
+								<i class="fa fa-minus"></i>
+							</a>
 							</div>
-							<input type="text" class="form-control" value="{{ cart_item.quantity }}">
+
+							<input type="text" class="form-control text-center"
+								value="{{ cart_item.quantity }}" readonly>
+
 							<div class="input-group-append">
-								<a class="btn btn-light" type="button" href="{% url 'add_to_cart' cart_item.product.id %}"><i class="fa fa-plus"></i></a>
+							<a class="btn btn-light"
+								href="{% url 'increment_cart_item' cart_item.id %}">
+								<i class="fa fa-plus"></i>
+							</a>
 							</div>
+
 						</div>
 					</td>
+
 
 					<td>
 						<div class="price-wrap">
@@ -60,7 +90,7 @@
 					</td>
 
 					<td class="text-right">
-						<a href="{% url 'remove_cart' cart_item.product.id %}" class="btn btn-danger">Remove</a>
+						<a href="{% url 'remove_cart' cart_item.id %}" class="btn btn-danger">Remove</a>
 					</td>
 				</tr>
                 {% endfor %}

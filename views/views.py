@@ -1,20 +1,40 @@
 from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from accounts.models import Account
 from cart.models import Cart, CartItem
 from category.models import Category
-from store.models import Product
+from store.models import Product, Variant
 from decimal import Decimal, ROUND_HALF_UP
 from django.contrib.auth.decorators import login_required
 from django.utils.text import slugify
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+
+import random
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import authenticate, login
+from django.core.mail import send_mail
+from django.shortcuts import redirect, render
+from django.utils.timezone import now
+from accounts.models import Account
 # Create your views here.
 
+
+
+
+
+# customer app views
 def home(request):
     products = Product.objects.all()
     return render(request, 'index.html', {'products': products})
 
+
+
+# customer auth views
 def register(request):
     if request.method == 'POST':
         first_name = request.POST['first_name']
@@ -59,30 +79,129 @@ def register(request):
         return redirect('signin')
 
     return render(request, 'register.html')
+
+
+
+# customer auth views
+
 def signin(request):
-    if request.method == 'POST':
-        email = request.POST['email']
-        password = request.POST['password']
+    # STEP 1 — PASSWORD SUBMISSION
+    if request.method == 'POST' and 'email' in request.POST:
+        email = request.POST.get('email')
+        password = request.POST.get('password')
 
         user = authenticate(request, email=email, password=password)
 
-        if user is not None:
-            login(request, user)
-            messages.success(request, 'Logged in successfully')
-            return redirect('home')
-        else:
+        if user is None:
             messages.error(request, 'Invalid email or password')
             return redirect('signin')
 
+        # Generate 6-digit OTP
+        otp = random.randint(100000, 999999)
+
+        # Store OTP + user in session
+        request.session['login_otp'] = str(otp)
+        request.session['otp_user_id'] = user.id
+
+        # Send OTP email
+        send_mail(
+            subject="Your OTP for GreatKart Login",
+            message=f"""
+Hello {user.first_name},
+
+Your One-Time Password (OTP) is:
+
+🔐 {otp}
+
+This OTP is valid for one login attempt.
+
+If you did not try to log in, please ignore this email.
+
+Regards,
+GreatKart Team
+""",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+
+        messages.success(request, "OTP sent to your email")
+        return render(request, 'verify_otp.html')  # OTP input page
+
+    # STEP 2 — OTP VERIFICATION
+    if request.method == 'POST' and 'otp' in request.POST:
+        entered_otp = request.POST.get('otp')
+        session_otp = request.session.get('login_otp')
+        user_id = request.session.get('otp_user_id')
+
+        if not session_otp or not user_id:
+            messages.error(request, "Session expired. Please login again.")
+            return redirect('signin')
+
+        if entered_otp != session_otp:
+            messages.error(request, "Invalid OTP")
+            return render(request, 'verify_otp.html')
+
+        # OTP VALID → LOGIN USER
+        user = Account.objects.get(id=user_id)
+        login(request, user)
+
+        # Update last_login
+        user.last_login = now()
+        user.save()
+
+        # Send successful login email
+        send_mail(
+            subject="Successful Login – GreatKart",
+            message=f"""
+Hello {user.first_name},
+
+You have successfully logged in to your GreatKart account.
+
+📅 Date & Time: {user.last_login}
+📧 Email: {user.email}
+
+If this was not you, please reset your password immediately.
+
+Regards,
+GreatKart Team
+""",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+
+        # Clean session
+        request.session.pop('login_otp', None)
+        request.session.pop('login_email', None)
+
+
+        messages.success(request, "Login successful")
+        return redirect('home')
+
+    # STEP 0 — NORMAL GET REQUEST
     return render(request, 'signin.html')
+# customer auth views
 def logout_user(request):
     logout(request)
     return redirect('home')
+
+
+# customer dashboard views
 @login_required(login_url='signin')
 def dashboard(request):
     return render(request, 'dashboard.html')
+
+
+# customer order_complete views
+@login_required(login_url='signin')
 def order_complete(request):
     return render(request, 'order_complete.html')
+
+
+
+# customer place order views
+@login_required(login_url='signin')
 def place_order(request):
     cart_items = CartItem.objects.filter(cart__cart_id=_cart_id(request))
     total_price = sum(item.sub_total() for item in cart_items)
@@ -94,23 +213,57 @@ def place_order(request):
         'grand_total': total_price + tax,
     }
     return render(request, 'place-order.html', context)
+
+
+# customer search views
 def search_results(request):
+    if request.method == 'GET':
+        keyword = request.GET.get('keyword', '')
+        if keyword:
+            products = Product.objects.filter(product_name__icontains=keyword)
+            product_count = products.count()
+            paginator = Paginator(products, 5)  # Show 5 products per page
+            page_number = request.GET.get('page')
+            page_products = paginator.get_page(page_number)
+            return render(request, 'search-result.html', {'products': page_products, 'product_count': product_count})   
     return render(request, 'search-result.html')
+
+
+# customer store views
 def store(request, category_slug=None):
     category = None
     products = None 
     if category_slug:
         category = get_object_or_404(Category, slug=category_slug)
         products = Product.objects.filter(category=category, is_available=True)
+        paginator = Paginator(products, 5)  # Show 5 products per page
+        page_number = request.GET.get('page')
+        page_products = paginator.get_page(page_number)
         product_count = products.count()
+        
     else:
-        products = Product.objects.all()
+        products = Product.objects.all().order_by('id')
         product_count = products.count()
-    return render(request, 'store.html', {'products': products, 'product_count': product_count})
-def product_detail(request , category_slug, product_slug):
-    product = get_object_or_404(Product,category__slug=category_slug, slug=product_slug , )
-    return render(request, 'product-detail.html', {'product': product })
+        paginator = Paginator(products, 5)  # Show 5 products per page
+        page_number = request.GET.get('page')
+        page_products = paginator.get_page(page_number)
+    return render(request, 'store.html', {'products': page_products, 'product_count': product_count})
 
+
+
+
+# customer product detail views
+def product_detail(request , category_slug, product_slug):
+    try:
+        single_product = Product.objects.get(category__slug=category_slug, slug=product_slug )
+        in_cart = CartItem.objects.filter(cart__cart_id=_cart_id(request), product=single_product).exists()
+    except Product.DoesNotExist:
+        single_product = None
+    return render(request, 'product-detail.html', {'product': single_product, 'in_cart': in_cart})
+
+
+
+# private function to get cart id
 def _cart_id(request):
     cart = request.session.session_key
     if not cart:
@@ -118,30 +271,54 @@ def _cart_id(request):
     return cart
 
 
-
+# customer add tocart views
+@login_required(login_url='signin')
 def add_to_cart(request, product_id):
     product = get_object_or_404(Product, id=product_id)
-    try:
-        cart = Cart.objects.get(cart_id=_cart_id(request))
-    except Cart.DoesNotExist:
-        cart = Cart.objects.create(cart_id=_cart_id(request))
-        cart.save()
-        
-    try:
-        cart_item = CartItem.objects.get(product=product, cart=cart)
-        cart_item.quantity += 1
-        cart_item.save()
-    except CartItem.DoesNotExist:
-        cart_item = CartItem.objects.create(
-            product=product,
-            quantity=1,
-            cart=cart
-        )
-        cart_item.save()
+    product_variations = []
+
+    if request.method == 'POST':
+        for key, value in request.POST.items():
+            try:
+                variation = Variant.objects.get(
+                    product=product,
+                    variant_category__iexact=key,
+                    variant_value__iexact=value
+                )
+                product_variations.append(variation)
+            except Variant.DoesNotExist:
+                pass
+
+    cart, _ = Cart.objects.get_or_create(cart_id=_cart_id(request))
+
+    cart_items = CartItem.objects.filter(product=product, cart=cart)
+
+    for item in cart_items:
+        existing_variations = list(item.variation.all())
+        if existing_variations == product_variations:
+            # SAME VARIANT → increase quantity
+            item.quantity += 1
+            item.save()
+            return redirect('cart')
+
+    # DIFFERENT VARIANT → create new cart item
+    cart_item = CartItem.objects.create(
+        product=product,
+        quantity=1,
+        cart=cart
+    )
+    if product_variations:
+        cart_item.variation.set(product_variations)
+
+    cart_item.save()
     return redirect('cart')
 
 
 
+
+
+# customer cart views
+@login_required(login_url='signin')
 def  cart(request, total=0, quantity=0, cart_items=None):
     try:
         cart = Cart.objects.get(cart_id=_cart_id(request))
@@ -163,6 +340,7 @@ def  cart(request, total=0, quantity=0, cart_items=None):
 
     context = {
         
+        
         'cart_items': cart_items,
         'total': total,
         'quantity': quantity,
@@ -172,31 +350,42 @@ def  cart(request, total=0, quantity=0, cart_items=None):
 
     return render(request, 'cart.html', context)
 
-def remove_cart_item(request, product_id):
+
+
+
+# customer remove cart views
+def remove_cart_item(request, cart_item_id):
     cart = Cart.objects.get(cart_id=_cart_id(request))
-    product = get_object_or_404(Product, id=product_id)
-    cart_item = CartItem.objects.get(product=product, cart=cart)
+
+    cart_item = CartItem.objects.get(id=cart_item_id, cart=cart)
     if cart_item.quantity > 1:
         cart_item.quantity -= 1
         cart_item.save()
     else:
         cart_item.delete()
     return redirect('cart')
-def remove_cart(request, product_id):
-    cart = Cart.objects.get(cart_id=_cart_id(request))
-    product = get_object_or_404(Product, id=product_id)
 
-    try:
-        cart_item = CartItem.objects.get(product=product, cart=cart)
-        cart_item.delete()
-    except CartItem.DoesNotExist:
-        pass
+def increment_cart_item(request, cart_item_id):
+    cart = get_object_or_404(Cart, cart_id=_cart_id(request))
+    cart_item = get_object_or_404(CartItem, id=cart_item_id, cart=cart)
+
+    cart_item.quantity += 1
+    cart_item.save()
+
+    return redirect('cart')
+
+
+# customer remove cart views
+def remove_cart(request, cart_item_id):
+    cart = get_object_or_404(Cart, cart_id=_cart_id(request))
+    cart_item = get_object_or_404(CartItem, id=cart_item_id, cart=cart)
+
+    cart_item.delete()
 
     # If cart still has items → stay on cart page
     if CartItem.objects.filter(cart=cart).exists():
         return redirect('cart')
-    else:
-        return redirect('store')
+    return redirect('store')
 
 
 
@@ -209,29 +398,57 @@ def owner_dashboard(request):
         return redirect('home')
     products = Product.objects.all()
     Categorys = Category.objects.all()
-    return render(request, 'owneradmin/dashboard.html', {'products': products, 'Categorys': Categorys})
+    Variants = Variant.objects.all()
+    return render(request, 'owneradmin/dashboard.html', {'products': products, 'Categorys': Categorys, 'Variants': Variants})
 @login_required
 def add_product(request):
     if request.method == 'POST':
         Product.objects.create(
+            brand_name=request.POST['brand_name'],
             product_name=request.POST['product_name'],
-            slug=request.POST['slug'],
             price=request.POST['price'],
             stock=request.POST['stock'],
             category_id=request.POST['category'],
             image=request.FILES['image'],
             description=request.POST['description'],
+            variation=request.POST['variation'],
+            size=request.POST['sizes'],
         )
         return redirect('owner_dashboard')
 
     categories = Category.objects.all()
     return render(request, 'owneradmin/add_product.html', {'categories': categories})
+
+@login_required(login_url='signin')
+def add_variant(request):
+    if not request.user.is_staff:
+        return redirect('home')
+
+    if request.method == 'POST':
+        Variant.objects.create(
+            product_id=request.POST['product'],
+            variant_category=request.POST['variant_category'],
+            variant_value=request.POST['variant_value'],
+            is_active=True if request.POST.get('is_active') else False,
+        )
+        messages.success(request, "Variant added successfully")
+        return redirect('owner_dashboard')
+
+    products = Product.objects.all()
+    return render(request, 'owneradmin/add_variant.html', {
+        'products': products
+    })
+
+
 @login_required
 def edit_product(request, id):
     product = get_object_or_404(Product, id=id)
 
     if request.method == 'POST':
+        product.brand_name = request.POST['brand_name']
         product.product_name = request.POST['product_name']
+        product.slug = slugify(request.POST['product_name'])
+        product.description = request.POST['description']
         product.price = request.POST['price']
         product.stock = request.POST['stock']
         product.category_id = request.POST['category']
@@ -252,7 +469,16 @@ def delete_product(request, id):
     return redirect('owner_dashboard')
 
 
+def generate_unique_slug(model, name, instance_id=None):
+    slug = slugify(name)
+    unique_slug = slug
+    counter = 1
 
+    while model.objects.filter(slug=unique_slug).exclude(id=instance_id).exists():
+        unique_slug = f"{slug}-{counter}"
+        counter += 1
+
+    return unique_slug
 
 
 @login_required(login_url='signin')
@@ -261,21 +487,18 @@ def add_category(request):
         return redirect('home')
 
     if request.method == 'POST':
-        name = request.POST['name']
-        description = request.POST.get('description', '')
-        cat_image = request.FILES.get('cat_image')
-
-        slug = slugify(name)
-
         Category.objects.create(
-            name=name,
-            slug=slug,
-            description=description,
-            cat_image=cat_image
+            name=request.POST.get('name'),
+            slug=generate_unique_slug(Category, request.POST.get('name')),
+            description=request.POST.get('description', ''),
+            cat_image=request.FILES.get('cat_image')
         )
-        return redirect('store')
+        messages.success(request, "Category added successfully")
+        return redirect('owner_dashboard')
 
-    return render(request, 'owneradmin/add_category.html')
+    return render(request, 'owneradmin/add_category.html')  
+        
+
 @login_required(login_url='signin')
 def edit_category(request, category_id):
     if not request.user.is_staff:
@@ -284,17 +507,28 @@ def edit_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
 
     if request.method == 'POST':
-        category.name = request.POST['name']
-        category.slug = slugify(category.name)
-        category.description = request.POST.get('description', '')
+        name = request.POST.get('name')
+        description = request.POST.get('description', '')
 
-        if 'cat_image' in request.FILES:
+        if not name:
+            messages.error(request, "Name is required")
+            return redirect('edit_category', category_id=category.id)
+
+        category.name = name
+        category.slug = generate_unique_slug(Category, name, category.id)
+        category.description = description
+
+        if request.FILES.get('cat_image'):
             category.cat_image = request.FILES['cat_image']
 
         category.save()
-        return redirect('store')
+        messages.success(request, "Category updated successfully")
+        return redirect('owner_dashboard')
 
     return render(request, 'owneradmin/edit_category.html', {'category': category})
+   
+   
+   
 @login_required(login_url='signin')
 def delete_category(request, category_id):
     if not request.user.is_staff:
@@ -304,7 +538,7 @@ def delete_category(request, category_id):
 
     if request.method == 'POST':
         category.delete()
-        return redirect('store')
+        return redirect('owner_dashboard')
 
     return render(request, 'owneradmin/delete_category.html', {'category': category})
 

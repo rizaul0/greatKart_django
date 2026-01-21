@@ -30,12 +30,9 @@
 				<div class="filter-content collapse show" id="collapse_1">
 					<div class="card-body">
 						<ul class="list-menu">
-							<li><a href="#">People</a></li>
-							<li><a href="#">Watches</a></li>
-							<li><a href="#">Cinema</a></li>
-							<li><a href="#">Clothes</a></li>
-							<li><a href="#">Home items</a></li>
-							<li><a href="#">Animals</a></li>
+							{% for category in categories %}
+							<li><a href="{% url 'products_by_category' category.slug %}">{{ category.name }}</a></li>
+							{% endfor %}
 						</ul>
 					</div>
 				</div>
@@ -102,25 +99,25 @@
 	<main class="col-md-9">
 
 	<header class="border-bottom mb-4 pb-3">
-		<span class="mr-md-auto">32 Items found</span>
+		<span class="mr-md-auto">{{ product_count }} Items found</span>
 	</header>
 
 	<div class="row">
 
-		{% for i in "12345678" %}
+		{% for product in products %}
 		<div class="col-md-4">
 			<figure class="card card-product-grid">
 				<div class="img-wrap">
-					<img src="/static/images/items/1.jpg">
+					<img src="{{ product.image.url }}">
 				</div>
 				<figcaption class="info-wrap">
 					<div class="fix-height">
-						<a href="/product-detail" class="title">Product name goes here</a>
+						<a href="/product-detail" class="title">{{ product.brand_name }} {{ product.product_name }}</a>
 						<div class="price-wrap mt-2">
-							<span class="price">$1280</span>
+							<span class="price">₹{{ product.price }}</span>
 						</div>
 					</div>
-					<a href="#" class="btn btn-block btn-primary">Add to cart</a>
+					<a href="{% url 'add_to_cart' product.id %}" class="btn btn-block btn-primary">Add to cart</a>
 				</figcaption>
 			</figure>
 		</div>
@@ -130,12 +127,37 @@
 
 	<nav class="mt-4">
 		<ul class="pagination">
-			<li class="page-item disabled"><a class="page-link">Previous</a></li>
-			<li class="page-item active"><a class="page-link">1</a></li>
-			<li class="page-item"><a class="page-link">2</a></li>
-			<li class="page-item"><a class="page-link">3</a></li>
-			<li class="page-item"><a class="page-link">Next</a></li>
-		</ul>
+			{% if products.has_previous %}
+				<li class="page-item">
+					<a class="page-link" href="?page={{ products.previous_page_number }}">Previous</a>
+				</li>
+			{% else %}
+				<li class="page-item disabled">
+					<span class="page-link">Previous</span>
+				</li>
+			{% endif %}
+
+			{% for num in products.paginator.page_range %}
+				{% if products.number == num %}
+					<li class="page-item active">
+						<span class="page-link">{{ num }}</span>
+					</li>
+				{% else %}
+					<li class="page-item">
+						<a class="page-link" href="?page={{ num }}">{{ num }}</a>
+					</li>
+				{% endif %}
+			{% endfor %}
+
+			{% if products.has_next %}
+				<li class="page-item">
+					<a class="page-link" href="?page={{ products.next_page_number }}">Next</a>
+				</li>
+			{% else %}
+				<li class="page-item disabled">
+					<span class="page-link">Next</span>
+				</li>
+			{% endif %}
 	</nav>
 
 	</main>

@@ -1,5 +1,14 @@
 {% extends 'base_template.html' %}
 {% block content %}
+{% if messages %}
+<div class="container mt-3">
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
 
 <section class="section-content padding-y">
 <div class="container">
@@ -30,7 +39,8 @@
     <td colspan="3">
         <a href="{% url 'add_category' %}" class="btn btn-primary mb-3">Add Category</a>
     </td>
-
+<tr>
+</table>
 <table class="table table-bordered">
 <tr>
     <th>Name</th>
@@ -54,6 +64,38 @@
     <td colspan="4">
         <a href="{% url 'add_product' %}" class="btn btn-primary mb-3">Add Product</a>
     </td>
+</tr>
+</table>
+
+<table class="table table-bordered">
+<tr>
+    <th>product name</th>
+    <th>Category</th>
+    <th>colour</th>
+    <th>size
+    <th>Actions</th>
+</tr>
+
+<h3>Products variant</h3>
+
+{% for variant in Variants %}
+<tr>
+    <td>{{ variant.product.product_name }}</td>
+    <td>{{ variant.product.category }}</td>
+    <td>{{ variant.variant_value }}</td>
+    <td>{{ variant.variant_value }}</td>
+    <td>
+        <a href="" class="btn btn-sm btn-warning">Edit</a>
+        <a href="" class="btn btn-sm btn-danger">Delete</a>
+    </td>
+</tr>
+
+{% endfor %}
+<tr>
+    <td colspan="3">
+        <a href="{% url 'add_variant' %}" class="btn btn-primary mb-3">Add Variant</a>
+    </td>
+<tr>
 </table>
 </div>
 </section>

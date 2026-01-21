@@ -1,0 +1,32 @@
+{% extends 'base_template.html' %}
+
+{% block title %}Verify OTP{% endblock %}
+
+{% block content %}
+{% if messages %}
+					{% for message in messages %}
+					<div class="alert alert-danger">{{ message }}</div>
+					{% endfor %}
+				{% endif %}
+<h2>Verify OTP</h2>
+<div class="card mx-auto" style="max-width: 380px; margin-top:100px;">
+<div class="alert alert-info card-body">
+    An OTP has been sent to your email. Please enter it below to verify your account.
+<form method="POST">
+  {% csrf_token %}
+                <div class="form-group">
+					<input
+						type="text"
+                        name="otp"
+						class="form-control"
+						placeholder="Enter OTP"
+						required
+					>
+				</div>
+  <button type="submit" class="btn btn-primary btn-block">Verify OTP</button>
+</form>
+</div>
+
+</div>
+
+{% endblock %}

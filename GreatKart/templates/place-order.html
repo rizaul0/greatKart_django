@@ -10,26 +10,33 @@
 
 <!-- ============================ REVIEW CART ============================ -->
 <article class="card mb-4">
-<div class="card-body">
-	<h4 class="card-title mb-4">Review cart</h4>
+  <div class="card-body">
+    <h4 class="card-title mb-4">Review cart</h4>
+
     {% for cart_item in cart_items %}
-	<div class="row">
-		<div class="col-md-6">
-			<figure class="itemside mb-4">
-				<div class="aside">
-					<img src="{{cart_item.product.image.url}}" class="border img-sm">
-				</div>
-				<figcaption class="info">
-					<p>{{cart_item.product.name}}</p>
-					<span class="text-muted">{{cart_item.quantity}}x = ₹{{cart_item.sub_total}}</span>
-				</figcaption>
-			</figure>
-		</div>
+    <div class="row align-items-center mb-3">
+      <div class="col-12">
+        <figure class="itemside d-flex align-items-center">
+          <div class="aside mr-3">
+            <img src="{{ cart_item.product.image.url }}" class="border img-sm">
+          </div>
+          <figcaption class="info">
+            <p class="mb-1 font-weight-bold">
+              {{ cart_item.product.product_name }}
+            </p>
+            <span class="text-muted">
+              {{ cart_item.quantity }} × ₹{{ cart_item.product.price }} =
+              <strong>₹{{ cart_item.sub_total }}</strong>
+            </span>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
     {% endfor %}
-		
-	</div>
-</div>
+
+  </div>
 </article>
+
 <!-- ============================ REVIEW CART END ============================ -->
 
 <!-- ============================ CONTACT INFO ============================ -->

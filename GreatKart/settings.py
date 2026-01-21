@@ -70,6 +70,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'views.context_processors.get_categories',
+                'views.context_processors.cart_count',
+                'views.context_processors.get_brands',
             ],
         },
     },
@@ -132,3 +134,19 @@ STATICFILES_DIRS = [
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+
+# ================= EMAIL CONFIGURATION =================
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = 'rizzpython@gmail.com'
+EMAIL_HOST_PASSWORD = 'zbipsyllrhbxiibv'
+
+DEFAULT_FROM_EMAIL = 'GreatKart <rizzpython@gmail.com>'

@@ -31,7 +31,7 @@
 		<div class="card card-product-grid">
 			<a href=" {% url 'product_detail' product.category.slug product.slug %} " class="img-wrap"> <img src="{{ product.image.url }}"> </a>
 			<figcaption class="info-wrap">
-				<a href=" {% url 'product_detail' product.category.slug product.slug %} " class="title">{{ product.product_name }}</a>
+				<a href=" {% url 'product_detail' product.category.slug product.slug %} " class="title">{{ product.brand_name }} {{ product.product_name }}</a>
 				<div class="price mt-1">₹{{ product.price }}</div> <!-- price-wrap // -->
 			</figcaption>
 		</div>

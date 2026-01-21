@@ -1,0 +1,68 @@
+{% extends 'base_template.html' %}
+{% block content %}
+
+<section class="section-content padding-y bg">
+  <div class="container">
+
+    <div class="card mx-auto" style="max-width: 700px;">
+      <article class="card-body">
+        <header class="mb-4">
+          <h4 class="card-title">Add Variant</h4>
+        </header>
+
+        <form method="POST">
+          {% csrf_token %}
+         
+          <!-- PRODUCT -->
+          <div class="form-group">
+            <label>Product</label>
+            <select name="product" class="form-control" required>
+              <option value="">Select product</option>
+              {% for product in products %}
+                <option value="{{ product.id }}">{{ product.product_name }} </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- VARIANT CATEGORY -->
+          <div class="form-group">
+            <label>Variant Category</label>
+            <select name="variant_category" class="form-control" required>
+              <option value="size">Size</option>
+              <option value="color">Color</option>
+            </select>
+          </div>
+          
+
+          <!-- VARIANT VALUE -->
+          <div class="form-group">
+            <label>Variant Value</label>
+            <input type="text" name="variant_value" class="form-control"
+                   placeholder="e.g. XL, Red" required>
+          </div>
+
+          <!-- IS ACTIVE -->
+          <div class="form-group form-check">
+            <input type="checkbox" name="is_active" class="form-check-input"
+                   id="is_active" checked>
+            <label class="form-check-label" for="is_active">Is active</label>
+          </div>
+
+          <!-- BUTTONS -->
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+              Save
+            </button>
+            <a href="{% url 'owner_dashboard' %}" class="btn btn-outline-secondary">
+              Cancel
+            </a>
+          </div>
+
+        </form>
+      </article>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
