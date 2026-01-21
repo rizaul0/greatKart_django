@@ -1,9 +1,10 @@
 from decimal import Decimal
+from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from accounts.models import Account
+from accounts.models import Account, PasswordResetToken
 from cart.models import Cart, CartItem
 from category.models import Category
 from store.models import Product, Variant
@@ -149,7 +150,7 @@ GreatKart Team
         # Update last_login
         user.last_login = now()
         user.save()
-
+        login_time = timezone.localtime(timezone.now())
         # Send successful login email
         send_mail(
             subject="Successful Login – GreatKart",
@@ -158,7 +159,7 @@ Hello {user.first_name},
 
 You have successfully logged in to your GreatKart account.
 
-📅 Date & Time: {user.last_login}
+📅 Date & Time: {login_time.strftime('%d %b %Y, %I:%M %p')} (IST)
 📧 Email: {user.email}
 
 If this was not you, please reset your password immediately.
@@ -181,6 +182,70 @@ GreatKart Team
 
     # STEP 0 — NORMAL GET REQUEST
     return render(request, 'signin.html')
+
+# custom forgot password views
+
+def forgot_password(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+
+        try:
+            user = Account.objects.get(email=email)
+        except Account.DoesNotExist:
+            messages.error(request, "Email not found")
+            return redirect('forgot_password')
+
+        token = PasswordResetToken.objects.create(user=user)
+
+        reset_link = f"http://127.0.0.1:8000/reset-password/{token.token}/"
+
+        send_mail(
+            subject="Reset your GreatKart password",
+            message=f"Click the link to reset your password:\n\n{reset_link}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+        )
+
+        messages.success(request, "Password reset link sent to your email")
+        return redirect('signin')
+
+    return render(request, 'auth/forgot_password.html')
+
+
+# custom password reset views
+def reset_password(request, token):
+    try:
+        reset_token = PasswordResetToken.objects.get(token=token, is_used=False)
+    except PasswordResetToken.DoesNotExist:
+        return HttpResponse("Invalid or expired link")
+
+    if reset_token.is_expired():
+        return HttpResponse("Reset link expired")
+
+    if request.method == 'POST':
+        password = request.POST.get('password')
+        confirm = request.POST.get('confirm_password')
+
+        if password != confirm:
+            messages.error(request, "Passwords do not match")
+            return redirect(request.path)
+
+        user = reset_token.user
+        user.set_password(password)
+        user.save()
+
+        reset_token.is_used = True
+        reset_token.save()
+
+        messages.success(request, "Password reset successful")
+        return redirect('signin')
+
+    return render(request, 'auth/reset_password.html')
+
+
+
+
+
 # customer auth views
 def logout_user(request):
     logout(request)

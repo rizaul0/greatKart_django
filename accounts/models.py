@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-
-
+from django.contrib.auth.models import PermissionsMixin as PermissionMixin
+import uuid
+from django.utils import timezone
 class MyAccountManager(BaseUserManager):
     def create_user(self, first_name, last_name, username, email, password=None, **extra_fields):
         if not email:
@@ -37,36 +38,21 @@ class MyAccountManager(BaseUserManager):
         return user
 
 
-class Account(AbstractBaseUser):
-    # Basic info
+class Account(AbstractBaseUser, PermissionMixin):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(max_length=100, unique=True)
 
-    # Extra fields from register form
     GENDER_CHOICES = (
         ('M', 'Male'),
         ('F', 'Female'),
     )
-    gender = models.CharField(
-        max_length=1,
-        choices=GENDER_CHOICES,
-        default='M'
-    )
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, default='M')
 
-    city = models.CharField(
-        max_length=100,
-        default='Unknown'
-    )
+    city = models.CharField(max_length=100, default='Unknown')
+    country = models.CharField(max_length=100, default='Unknown')
 
-    country = models.CharField(
-        max_length=100,
-        default='Unknown'
-    )
-
-
-    # System fields
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(null=True, blank=True)
 
@@ -75,6 +61,7 @@ class Account(AbstractBaseUser):
     is_active = models.BooleanField(default=True)
     is_superadmin = models.BooleanField(default=False)
 
+    EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
@@ -88,3 +75,15 @@ class Account(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return True
+
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey('Account', on_delete=models.CASCADE)
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timezone.timedelta(hours=1)
+
+    def __str__(self):
+        return f"{self.user.email}"

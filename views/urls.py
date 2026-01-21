@@ -1,13 +1,17 @@
-from django.urls import path, include
-
+from django.urls import path
+from django.contrib.auth import views as auth_views
 from views import views
 from accounts import views
-from .views import add_category, add_product, add_to_cart, add_variant, delete_product, edit_product, home, increment_cart_item, logout_user, owner_dashboard,product_detail,register, remove_cart, remove_cart_item,signin,dashboard,order_complete,place_order,search_results, store,cart, edit_category, delete_category
+from .views import add_category, add_product, add_to_cart, add_variant, delete_product, edit_product, home, increment_cart_item, logout_user, owner_dashboard,product_detail,register, remove_cart, remove_cart_item,signin,dashboard,order_complete,place_order,search_results, store,cart, edit_category, delete_category, forgot_password, reset_password
 urlpatterns = [
     path('', home, name='home'),
     path('register/', register, name='register'),
     path('signin/', signin, name='signin'),
+    path('forgot-password/', forgot_password, name='forgot_password'),
+    path('reset-password/<uuid:token>/', reset_password, name='reset_password'),
+
     path('logout/', logout_user, name='logout'),
+    
 
     path('dashboard/', dashboard, name='dashboard'),
     path('order-complete/', order_complete, name='order_complete'),
@@ -22,7 +26,7 @@ urlpatterns = [
     path('cart/remove/<int:cart_item_id>/',remove_cart, name='remove_cart'),
     path('cart/remove_item/<int:cart_item_id>/', remove_cart_item, name='remove_cart_item'),
     path('cart/increment/<int:cart_item_id>/', increment_cart_item, name='increment_cart_item'),
-    path('cart/decrement/<int:cart_item_id>/', remove_cart_item, name='remove_cart_item'),
+
 
 
     
@@ -43,3 +47,4 @@ urlpatterns = [
     path('owneradmin/add-variant/', add_variant, name='add_variant'),
 
 ]
+
