@@ -43,9 +43,22 @@ def cart(request, total=0, quantity=0, cart_items=None):
             ).first()
 
             if coupon and coupon.is_valid():
-                discount = calculate_coupon_discount(cart_items, coupon)
+        # 🔑 check applicability AGAIN
+                applicable = False
+                for item in cart_items:
+                    if coupon.products.filter(id=item.product.id).exists():
+                        applicable = True
+                        break
+
+                if applicable:
+                    discount = calculate_coupon_discount(cart_items, coupon)
+                else:
+                    # ❌ auto-remove invalid coupon
+                    del request.session["coupon_id"]
+                    coupon = None
             else:
-                request.session.pop('coupon_id', None)
+                del request.session["coupon_id"]
+                coupon = None
 
         tax = ((total - discount) * Decimal('0.09')).quantize(Decimal('0.01'))
         grand_total = total - discount + tax

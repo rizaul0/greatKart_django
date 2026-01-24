@@ -12,6 +12,8 @@ from django.utils.timezone import now
 from django.contrib.auth.decorators import login_required
 import random
 from cart.models import Cart, CartItem
+from orders.models import Order
+from store.models import Product, Variant
 
 
 # Create your views here.
@@ -298,3 +300,20 @@ def edit_address(request):
 def logout_user(request):
     logout(request)
     return redirect('home')
+
+
+
+@login_required(login_url='signin')
+def dashboard(request):
+    orders = (
+        Order.objects
+        .filter(user=request.user, is_ordered=True)
+        .select_related('coupon')
+        .prefetch_related('items__product')
+        .order_by('-created_at')
+    )
+
+    return render(request, 'dashboard.html', {
+        'orders': orders
+    })
+

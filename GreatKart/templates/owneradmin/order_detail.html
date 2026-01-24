@@ -1,0 +1,51 @@
+{% extends 'owneradmin/base_owner.html' %}
+
+{% block owner_content %}
+
+<h4 class="mb-3">Order {{ order.order_number }}</h4>
+<strong>Order Date:</strong> {{ order.created_at|date:"M d, Y H:i" }} <br>
+<div class="card mb-3">
+    <div class="card-body">
+        <strong>Name:</strong> {{ order.user.first_name }} {{ order.user.last_name }} <br>
+        <strong>User:</strong> {{ order.user.email }} <br>
+        <strong>Phone:</strong> {{ order.user.phone }} <br>
+        <strong>Payment:</strong> {{ order.payment_method }} <br>
+        <strong>Status:</strong> {{ order.status }} <br>
+        <strong>Total:</strong> ₹{{ order.order_total }}<br>
+        <strong>Delivery Address:</strong>
+        <p>
+            {{ order.user.house }},
+            {{ order.user.street }},
+            {{ order.user.city }},
+            {{ order.user.state }},
+            {{ order.user.zip }} <br>
+            {{ order.user.country }}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Product</th>
+                    <th>Variant</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.product.product_name }}</td>
+                    <td>{{ item.color }} {{ item.size }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>₹{{ item.product_price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

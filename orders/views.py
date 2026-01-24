@@ -47,6 +47,9 @@ def place_order(request):
         order_number=f"GK{int(timezone.now().timestamp())}",
         order_total=grand_total,
         tax=tax,
+        coupon=coupon,
+        discount=discount,
+        status="New",
         is_ordered=False,
         ip=request.META.get("REMOTE_ADDR"),
     )
@@ -98,12 +101,15 @@ def cod_confirm(request):
 
     order.payment_method = "COD"
     order.is_ordered = True
+    order.status = "New"
     order.save()
 
     cart_items.delete()
 
     # SEND EMAIL
-    pdf = generate_invoice_pdf(order, order.orderproduct_set.all())
+    order_products = OrderProduct.objects.filter(order=order)
+    pdf = generate_invoice_pdf(order, order_products)
+
     email = EmailMessage(
         subject="Your GreatKart Invoice",
         body="Thank you for your order.",
@@ -206,12 +212,15 @@ def payu_success(request):
     order.transaction_id = txnid
     order.payment_method = "PayU"
     order.is_ordered = True
+    order.status = "New"
     order.save()
 
     cart_items.delete()
 
     # SEND EMAIL
-    pdf = generate_invoice_pdf(order, order.orderproduct_set.all())
+    order_products = OrderProduct.objects.filter(order=order)
+    pdf = generate_invoice_pdf(order, order_products)
+
     email_msg = EmailMessage(
         subject="Your GreatKart Invoice",
         body="Thank you for your order.",
@@ -238,7 +247,8 @@ def order_complete(request):
 
     return render(request, "order_complete.html", {
         "order": order,
-        "ordered_products": order.orderproduct_set.all(),
+        "ordered_products": OrderProduct.objects.filter(order=order),
+
         "total_price": order.order_total,
         "tax": order.tax,
         "grand_total": order.order_total,

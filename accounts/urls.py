@@ -8,5 +8,6 @@ urlpatterns = [
     path('forgot-password/', views.forgot_password, name='forgot_password'),
     path('reset-password/<uuid:token>/', views.reset_password, name='reset_password'),
     path("edit-address/", views.edit_address, name="edit_address"),
+    path('dashboard/', views.dashboard, name='dashboard'),
     
 ]

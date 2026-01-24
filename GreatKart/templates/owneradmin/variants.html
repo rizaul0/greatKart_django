@@ -1,0 +1,49 @@
+{% extends 'owneradmin/base_owner.html' %}
+
+{% block owner_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>Variants</h4>
+    <a href="{% url 'add_variant' %}" class="btn btn-success btn-sm">
+        + Add Variant
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Product</th>
+                    <th>Type</th>
+                    <th>Value</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for v in variants %}
+                <tr>
+                    <td>{{ v.product.product_name }}</td>
+                    <td>{{ v.variant_category|title }}</td>
+                    <td>{{ v.variant_value }}</td>
+                    <td>
+                        {% if v.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-4">
+                        No variants found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

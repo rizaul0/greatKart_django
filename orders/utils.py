@@ -148,6 +148,6 @@ def generate_payu_hash(data, salt):
     )
 
     # DEBUG — remove after success
-    print("PAYU HASH STRING (FIXED):", hash_string)
+    # print("PAYU HASH STRING (FIXED):", hash_string)
 
     return hashlib.sha512(hash_string.encode("utf-8")).hexdigest().lower()

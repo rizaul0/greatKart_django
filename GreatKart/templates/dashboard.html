@@ -50,39 +50,65 @@
     </header>
 
     <div class="card-body">
-        <div class="row">
+        <div class="row align-items-start">
 
-            <div class="col-md-8">
-                <h6 class="text-muted">Delivery to</h6>
-                <p>
-                    {{ order.user.first_name }} {{ order.user.last_name }} <br>
-                    Phone: {{ order.user.phone }} <br>
-                    Email: {{ order.user.email }} <br>
-                    Location:
-                    {{ order.user.house }},
-                    {{ order.user.street }},
-                    {{ order.user.city }},
-                    {{ order.user.state }},
-                    {{ order.user.zip }} <br>
-                    Country: {{ order.user.country }}
+    <!-- DELIVERY -->
+    <div class="col-md-4">
+        <h6 class="text-muted">Delivery to</h6>
+        <p>
+            {{ order.user.first_name }} {{ order.user.last_name }} <br>
+            Phone: {{ order.user.phone }} <br>
+            Email: {{ order.user.email }} <br>
+            {{ order.user.house }},
+            {{ order.user.street }},
+            {{ order.user.city }},
+            {{ order.user.state }},
+            {{ order.user.zip }} <br>
+            {{ order.user.country }}
+        </p>
+    </div>
+
+    <!-- PRODUCTS (IMAGE + QTY) -->
+    <div class="col-md-4">
+        <h6 class="text-muted">Items</h6>
+
+        {% for item in order.items.all %}
+        <div class="d-flex align-items-center mb-2">
+            <img src="{{ item.product.image.url }}"
+                 class="img-sm border mr-2"
+                 style="width:50px;height:50px;object-fit:cover;">
+
+            <div>
+                <p class="mb-0 font-weight-bold">
+                    {{ item.product.product_name }}
                 </p>
+                <small class="text-muted">
+                    Qty: {{ item.quantity }}
+                </small>
             </div>
-
-            <div class="col-md-4">
-                <h6 class="text-muted">Payment</h6>
-                <span class="text-success">
-                    <i class="fab fa-lg fa-cc-visa"></i>
-                    {{ order.payment_method|default:"COD" }}
-                </span>
-
-                <p class="mt-2">
-                    Subtotal: Rs. {{ order.order_total|floatformat:2 }} <br>
-                    Tax: Rs. {{ order.tax|floatformat:2 }} <br>
-                    <strong>Total: Rs. {{ order.order_total|floatformat:2 }}</strong>
-                </p>
-            </div>
-
         </div>
+        {% endfor %}
+    </div>
+
+    <!-- PAYMENT -->
+    <div class="col-md-4">
+        <h6 class="text-muted">Payment</h6>
+        <span class="text-success">
+            {{ order.get_payment_method_display }}
+        </span>
+
+        <p class="mt-2">
+            Subtotal: ₹{{ order.order_total|floatformat:2 }} <br>
+            Tax: ₹{{ order.tax|floatformat:2 }} <br>
+            {% if order.discount %}
+            Discount: <span class="text-success">-₹{{ order.discount }}</span><br>
+            {% endif %}
+            <strong>Total: ₹{{ order.order_total|floatformat:2 }}</strong>
+        </p>
+    </div>
+
+</div>
+
     </div>
 
     <div class="table-responsive">

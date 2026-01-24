@@ -122,7 +122,7 @@
 						</button>
 						</form>
 
-						{% if coupon %}
+						{% if coupon and discount %}
 						<div class="alert alert-success p-2 mt-2">
 						<strong>{{ coupon.code }}</strong>
 						({{ coupon.discount_percent }}% OFF)

@@ -83,8 +83,3 @@ def product_detail(request , category_slug, product_slug):
 
 
 
-@login_required(login_url='signin')
-def dashboard(request ):
-    orders =  Order.objects.filter(user=request.user, is_ordered=True).order_by('-created_at')
-    
-    return render(request, 'dashboard.html', {'orders': orders})

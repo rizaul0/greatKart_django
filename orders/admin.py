@@ -1,23 +1,50 @@
+# orders/admin.py
 from django.contrib import admin
-from .models import Payment, Order, OrderProduct
-# Register your models here.
+from .models import Order, OrderProduct
 
 
-class PaymentAdmin(admin.ModelAdmin):
-    list_display = ('order_id', 'user', 'amount', 'payment_method', 'status', 'created_at')
-    search_fields = ('order_id', 'user__username')
-    list_filter = ('status', 'created_at')
-admin.site.register(Payment, PaymentAdmin)
+class OrderProductInline(admin.TabularInline):
+    model = OrderProduct
+    extra = 0
+    readonly_fields = (
+        "product",
+        "color",
+        "size",
+        "quantity",
+        "product_price",
+        "user",
+    )
 
+
+@admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('order_number', 'user', 'order_total', 'tax', 'status', 'is_ordered', 'created_at')
-    search_fields = ('order_number', 'user__username')
-    list_filter = ('status', 'is_ordered', 'created_at')
-admin.site.register(Order, OrderAdmin)
+    list_display = (
+        "order_number",
+        "user",
+        "coupon",
+        "payment_method",
+        "order_total",
+        "discount",
+        "tax",
+        "status",
+        "is_ordered",
+        "created_at",
+    )
 
-class OrderProductAdmin(admin.ModelAdmin):
-    list_display = ('product', 'order', 'user', 'quantity', 'product_price', 'ordered')
-    search_fields = ('product__product_name', 'order__order_number', 'user__username')
-    list_filter = ('ordered',)
+    readonly_fields = (
+        "user",
+        "coupon",
+        "order_number",
+        "payment_method",
+        "order_total",
+        "discount",
+        "tax",
+        "ip",
+        "created_at",
+        "is_ordered",
+    )
 
-admin.site.register(OrderProduct, OrderProductAdmin)
+    list_filter = ("status", "payment_method", "created_at")
+
+
+    inlines = [OrderProductInline]

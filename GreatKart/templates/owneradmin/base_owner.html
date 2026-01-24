@@ -1,0 +1,59 @@
+{% extends 'base_template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+
+        <!-- OWNER SIDEBAR -->
+       <aside class="col-md-2 bg-dark text-white min-vh-100 p-3">
+    <h5 class="text-center mb-4">Owner Panel</h5>
+
+    <ul class="nav flex-column gap-1">
+        <li class="nav-item">
+            <a class="nav-link text-white" href="{% url 'owner_dashboard' %}">
+                Dashboard
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link text-white" href="{% url 'owner_products' %}">
+                Products
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link text-white" href="{% url 'owner_variants' %}">
+                Variants
+            </a>
+        </li>
+        <li class="nav-item">
+    <a class="nav-link text-white" href="{% url 'owner_orders' %}">
+        Orders
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link text-white" href="{% url 'owner_coupons' %}">
+        Coupons
+    </a>
+</li>
+
+
+        <li class="nav-item mt-3">
+            <a class="btn btn-outline-light btn-sm w-100" href="{% url 'logout' %}">
+                Logout
+            </a>
+        </li>
+    </ul>
+</aside>
+
+
+        <!-- MAIN CONTENT -->
+        <main class="col-md-10 p-4">
+            {% block owner_content %}{% endblock %}
+        </main>
+
+    </div>
+</div>
+{% endblock %}

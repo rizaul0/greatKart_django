@@ -1,0 +1,26 @@
+{% extends 'owneradmin/base_owner.html' %}
+
+{% block owner_content %}
+
+<h4 class="mb-4 text-danger">Delete Coupon</h4>
+
+<div class="card">
+  <div class="card-body">
+    <p>
+      Are you sure you want to delete
+      <strong>{{ coupon.code }}</strong>?
+    </p>
+
+    <form method="POST">
+      {% csrf_token %}
+      <a href="{% url 'owner_coupons' %}" class="btn btn-light">
+        Cancel
+      </a>
+      <button type="submit" class="btn btn-danger">
+        Yes, Delete
+      </button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

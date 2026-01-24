@@ -13,5 +13,4 @@ urlpatterns = [
         views.product_detail,
         name='product_detail'
     ),
-    path('dashboard/', views.dashboard, name='dashboard'),
 ]
