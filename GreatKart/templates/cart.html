@@ -48,7 +48,7 @@
 						<figure class="itemside align-items-center">
 							
 							<figcaption class="info">
-								<a href="{% url 'product_detail' cart_item.product.category.slug cart_item.product.slug %}" class="title text-dark stretched-link">
+								<a href="{% url 'product_detail' cart_item.product.category.slug cart_item.product.slug %}" class="title text-dark ">
 									{% if cart_item.variation.all %}
                                        {% for variant in cart_item.variation.all %}
 											{{ variant.variant_value }}
@@ -62,20 +62,16 @@
 						<div class="input-group input-spinner">
 
 							<div class="input-group-prepend">
-							<a class="btn btn-light"
-								href="{% url 'remove_cart_item' cart_item.id %}">
-								<i class="fa fa-minus"></i>
-							</a>
+							<a href="{% url 'decrement_cart_item' cart_item.id %}" class="btn btn-light">
+                            <i class="fa fa-minus"></i>
+                                </a>
 							</div>
 
 							<input type="text" class="form-control text-center"
 								value="{{ cart_item.quantity }}" readonly>
 
 							<div class="input-group-append">
-							<a class="btn btn-light"
-								href="{% url 'increment_cart_item' cart_item.id %}">
-								<i class="fa fa-plus"></i>
-							</a>
+							<a href="{% url 'increment_cart_item' cart_item.id %}" class="btn btn-light"><i class="fa fa-plus"></i></a>
 							</div>
 
 						</div>
@@ -90,7 +86,7 @@
 					</td>
 
 					<td class="text-right">
-						<a href="{% url 'remove_cart' cart_item.id %}" class="btn btn-danger">Remove</a>
+						<a href="{% url 'remove_cart' cart_item.id %}" class="btn btn-danger"> Remove</a>
 					</td>
 				</tr>
                 {% endfor %}
@@ -115,10 +111,43 @@
 	<aside class="col-lg-3">
 		<div class="card">
 			<div class="card-body">
+				<form method="POST" action="{% url 'apply_coupon' %}">
+						{% csrf_token %}
+						<input type="text"
+								name="coupon_code"
+								class="form-control mb-2"
+								placeholder="Enter coupon code">
+						<button class="btn btn-outline-primary btn-block">
+							Apply Coupon
+						</button>
+						</form>
+
+						{% if coupon %}
+						<div class="alert alert-success p-2 mt-2">
+						<strong>{{ coupon.code }}</strong>
+						({{ coupon.discount_percent }}% OFF)
+
+						<a href="{% url 'remove_coupon' %}"
+							class="btn btn-sm btn-danger float-end">
+							Remove
+						</a>
+						</div>
+						{% endif %}
+
+
+						<hr>
+
 				<dl class="dlist-align">
 					<dt>Total price:</dt>
 					<dd class="text-right">₹{{ total }}</dd>
 				</dl>
+				<dl class="dlist-align">
+					<dt>Discount:</dt>
+				     	<dd class="text-right text-success">-₹{{ discount }}
+
+						</dd>
+				</dl>
+
 				<dl class="dlist-align">
 					<dt>Tax:</dt>
 					<dd class="text-right">₹{{ tax }}</dd>

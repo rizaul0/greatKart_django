@@ -9,7 +9,6 @@ urlpatterns = [
     path('signin/', signin, name='signin'),
     path('forgot-password/', forgot_password, name='forgot_password'),
     path('reset-password/<uuid:token>/', reset_password, name='reset_password'),
-
     path('logout/', logout_user, name='logout'),
     
 
@@ -23,9 +22,9 @@ urlpatterns = [
     path('store/<slug:brand>/', store, name='products_by_brand'),
     path('cart/', cart, name='cart'),
     path('cart/add/<int:product_id>/', add_to_cart, name='add_to_cart'),
-    path('cart/remove/<int:cart_item_id>/',remove_cart, name='remove_cart'),
-    path('cart/remove_item/<int:cart_item_id>/', remove_cart_item, name='remove_cart_item'),
     path('cart/increment/<int:cart_item_id>/', increment_cart_item, name='increment_cart_item'),
+    path('cart/decrement/<int:cart_item_id>/', remove_cart_item, name='decrement_cart_item'),
+    path('cart/remove/<int:cart_item_id>/', remove_cart, name='remove_cart'),
 
 
 

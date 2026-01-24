@@ -1,0 +1,68 @@
+{% extends 'base_template.html' %}
+{% block content %}
+
+<section class="section-content padding-y bg">
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-md-6">
+
+<article class="card">
+<div class="card-body">
+<h4 class="mb-4">Update Address</h4>
+
+<form method="POST">
+{% csrf_token %}
+
+<div class= 'form-group'> 
+  <label>username</label>
+  <input type="text" name="username" class="form-control" value="{{ user.username }}">
+</div>
+<div class="form-group">
+  <label>phone </label>
+  <input type="text" name="phone" class="form-control" value="{{ user.phone }}">
+</div>
+<div class="form-group">
+  <label>House / Flat</label>
+  <input type="text" name="house" class="form-control" value="{{ user.house }}">
+</div>
+
+<div class="form-group">
+  <label>Street</label>
+  <input type="text" name="street" class="form-control" value="{{ user.street }}">
+</div>
+
+<div class="form-group">
+  <label>City</label>
+  <input type="text" name="city" class="form-control" value="{{ user.city }}">
+</div>
+
+<div class="form-group">
+  <label>State</label>
+  <input type="text" name="state" class="form-control" value="{{ user.state }}">
+</div>
+
+<div class="form-group">
+  <label>ZIP Code</label>
+  <input type="text" name="zip" class="form-control" value="{{ user.zip }}">
+</div>
+
+<div class="form-group">
+  <label>Country</label>
+  <input type="text" name="country" class="form-control" value="{{ user.country }}">
+</div>
+
+<button class="btn btn-primary btn-block mt-3">
+  Save Address
+</button>
+
+</form>
+
+</div>
+</article>
+
+</div>
+</div>
+</div>
+</section>
+
+{% endblock %}

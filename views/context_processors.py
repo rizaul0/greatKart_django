@@ -1,6 +1,7 @@
 
 from category.models import Category
 from cart.models import Cart, CartItem
+from cart.views import _cart_id
 def get_categories(request):
     
     categories = Category.objects.all()
@@ -11,11 +12,10 @@ def get_brands(request):
     return {'brands': brands}
 
 def cart_count(request):
-    
-    cart_items_count = 0
+    count = 0
     try:
-        cart = Cart.objects.get(cart_id=request.session.session_key)
-        cart_items_count = CartItem.objects.filter(cart=cart).count()
+        cart = Cart.objects.get(cart_id=_cart_id(request))
+        count = CartItem.objects.filter(cart=cart, is_active=True).count()
     except Cart.DoesNotExist:
-        cart_items_count = 0
-    return {'cart_items_count': cart_items_count}
+        pass
+    return {'cart_items_count': count}

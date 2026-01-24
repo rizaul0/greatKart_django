@@ -47,6 +47,9 @@ INSTALLED_APPS = [
     'accounts',
     'store',
     'cart',
+    "orders",
+    'owneradmin',
+    'coupons',
 ]
 SITE_ID = 1
 MIDDLEWARE = [
@@ -154,4 +157,8 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
-DEFAULT_FROM_EMAIL = 'GreatKart <rizzpython@gmail.com>'
+DEFAULT_FROM_EMAIL = 'GreatKart <{}>'.format(EMAIL_HOST_USER)
+
+PAYU_MERCHANT_KEY = "gtKFFx"
+PAYU_MERCHANT_SALT = "4R38IvwiV57FwVpsgOvTXBdLE4tHUXFW"
+PAYU_URL = "https://test.payu.in/_payment"

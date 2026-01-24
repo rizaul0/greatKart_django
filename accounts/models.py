@@ -43,6 +43,14 @@ class Account(AbstractBaseUser, PermissionMixin):
     last_name = models.CharField(max_length=50)
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(max_length=100, unique=True)
+    street = models.CharField(max_length=255, blank=True)
+    house = models.CharField(max_length=50, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    country = models.CharField(max_length=100, default="India")
+    zip = models.CharField(max_length=20, blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+
 
     GENDER_CHOICES = (
         ('M', 'Male'),

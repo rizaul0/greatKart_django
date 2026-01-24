@@ -1,0 +1,67 @@
+{% extends "base_template.html" %}
+{% load static %}
+
+{% block content %}
+<section class="section-content padding-y bg">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+
+        <article class="card text-center">
+          <div class="card-body">
+
+            <!-- PayU Logo -->
+            <img src="{% static 'images/payu.png' %}" height="40" class="mb-4">
+
+            <h5 class="mb-3">Redirecting to PayU Secure Payment</h5>
+
+            <p class="text-muted">
+              Please wait while we redirect you to the secure payment gateway.
+              <br>
+              <strong>Do not refresh or press back.</strong>
+            </p>
+
+            <!-- Loader -->
+            <div class="my-4">
+              <div class="spinner-border text-success" role="status">
+                <span class="sr-only">Loading...</span>
+              </div>
+            </div>
+
+            <p class="text-muted small">
+              Order Total: <strong>₹{{ payu_data.amount }}</strong>
+            </p>
+
+            <!-- Fallback button (noscript / slow JS) -->
+            <noscript>
+              <form method="post" action="{{ payu_url }}">
+                {% for key, value in payu_data.items %}
+                  <input type="hidden" name="{{ key }}" value="{{ value }}">
+                {% endfor %}
+                <button class="btn btn-success btn-block mt-3">
+                  Continue to PayU
+                </button>
+              </form>
+            </noscript>
+
+          </div>
+        </article>
+
+        <!-- Auto-submit form -->
+        <form method="post" action="{{ payu_url }}" name="payuForm">
+          {% for key, value in payu_data.items %}
+            <input type="hidden" name="{{ key }}" value="{{ value }}">
+          {% endfor %}
+        </form>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  setTimeout(function () {
+    document.payuForm.submit();
+  }, 1200);  // small delay for UX
+</script>
+{% endblock %}
