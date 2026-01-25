@@ -14,8 +14,8 @@ def send_email_async(subject, message, recipients):
                 recipient_list=recipients,
                
             )
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Error sending email: {e}")
 
     threading.Thread(target=task, daemon=True).start()
 
