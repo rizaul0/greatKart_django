@@ -14,6 +14,7 @@ from coupons.models import Coupon
 from coupons.utils import calculate_coupon_discount
 from orders.models import Order, OrderProduct
 from orders.utils import generate_invoice_pdf
+from utils.email import send_invoice_email_async
 from .utils import generate_payu_hash
 from django.core.mail import EmailMessage
 
@@ -110,14 +111,7 @@ def cod_confirm(request):
     order_products = OrderProduct.objects.filter(order=order)
     pdf = generate_invoice_pdf(order, order_products)
 
-    email = EmailMessage(
-        subject="Your GreatKart Invoice",
-        body="Thank you for your order.",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[order.user.email],
-    )
-    email.attach(f"Invoice_{order.order_number}.pdf", pdf.getvalue(), "application/pdf")
-    email.send()
+    send_invoice_email_async(order, pdf)
 
     del request.session["pending_order_id"]
 
@@ -221,14 +215,7 @@ def payu_success(request):
     order_products = OrderProduct.objects.filter(order=order)
     pdf = generate_invoice_pdf(order, order_products)
 
-    email_msg = EmailMessage(
-        subject="Your GreatKart Invoice",
-        body="Thank you for your order.",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[order.user.email],
-    )
-    email_msg.attach(f"Invoice_{order.order_number}.pdf", pdf.getvalue(), "application/pdf")
-    email_msg.send()
+    send_invoice_email_async(order, pdf)
 
     return redirect(f"/orders/order_complete/?order_id={order.id}")
 

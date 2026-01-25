@@ -169,7 +169,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  # IMPORTANT: literally this string
 EMAIL_HOST_PASSWORD = os.getenv('BREVO_SMTP_KEY')
 
-DEFAULT_FROM_EMAIL =  f"GreatKart <{EMAIL_HOST_USER}>"
+DEFAULT_FROM_EMAIL =  f"GreatKart <{os.getenv('DEFAULT_FROM_EMAIL')}>"
 
 
 
