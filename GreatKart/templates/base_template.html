@@ -87,27 +87,32 @@
 {% else %}
 
 <!-- STORE NAV -->
-<div class="col-lg col-md col-sm col-6 flex-grow-0">
-  <div class="category-wrap dropdown d-inline-block">
-    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-      <i class="fa fa-bars"></i> All Categories
-    </button>
-    <div class="dropdown-menu">
-      {% for category in categories %}
-        <a class="dropdown-item" href="{% url 'products_by_category' category.slug %}">
-          {{ category.name }}
-        </a>
-      {% endfor %}
+<div class="col-12 col-md-auto mb-2 mb-md-0">
+  <div class="d-flex flex-wrap gap-2">
+    <div class="dropdown">
+      <button class="btn btn-primary dropdown-toggle btn-sm" data-toggle="dropdown">
+        <i class="fa fa-bars"></i> Categories
+      </button>
+      <div class="dropdown-menu">
+        {% for category in categories %}
+          <a class="dropdown-item" href="{% url 'products_by_category' category.slug %}">
+            {{ category.name }}
+          </a>
+        {% endfor %}
+      </div>
     </div>
+
+    <a href="{% url 'store' %}" class="btn btn-outline-primary btn-sm">
+      Store
+    </a>
   </div>
 </div>
-
-<a href="{% url 'store' %}" class="btn btn-outline-primary ml-2">Store</a>
 
 {% endif %}
 
 <!-- SEARCH -->
-<div class="col-lg col-md-6 col-sm-12">
+<div class="col-12 col-md mt-2 mt-md-0">
+
 <form action="{% url 'search_results' %}" method="get" class="search">
   <div class="input-group w-100">
     <input type="text" class="form-control" name="keyword" placeholder="Search products">

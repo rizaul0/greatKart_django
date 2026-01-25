@@ -9,95 +9,108 @@
 <div class="row">
 	<!-- CART ITEMS -->
 	 
-	<aside class="col-lg-9">
+	<div class="col-12">
 		<div class="card">
 			
 			
 			<table class="table table-borderless table-shopping-cart">
 				<thead class="text-muted">
 			{% if cart_items %}
-					<tr class="small text-uppercase">
-						<th scope="col">Product</th>
-						<th scope="col">variant</th>
-						<th scope="col" width="120">Quantity</th>
-						<th scope="col" width="120">Price</th>
-						<th scope="col" class="text-right" width="200"></th>
-					</tr>
-				</thead>
 
-				<tbody>
-			
+<!-- DESKTOP TABLE (hidden on mobile) -->
+<div class="d-none d-md-block">
+<table class="table table-borderless table-shopping-cart">
+    <thead class="text-muted">
+        <tr class="small text-uppercase">
+            <th>Product</th>
+            <th>Variant</th>
+            <th width="120">Quantity</th>
+            <th width="120">Price</th>
+            <th width="120"></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for cart_item in cart_items %}
+        <tr>
+            <td>
+                <figure class="itemside align-items-center">
+                    <div class="aside">
+                        <img src="{{ cart_item.product.image.url }}" class="img-sm">
+                    </div>
+                    <figcaption class="info">
+                        <strong>{{ cart_item.product.product_name }}</strong>
+                        <p class="text-muted small">{{ cart_item.product.brand_name }}</p>
+                    </figcaption>
+                </figure>
+            </td>
 
-				<!-- ITEM 1 -->
-                    {% for cart_item in cart_items %}
-				<tr>
-                    
-					<td>
-						<figure class="itemside align-items-center">
-							<div class="aside">
-								<img src="{{ cart_item.product.image.url }}" class="img-sm">
-							</div>
-							<figcaption class="info">
-								<a href="{% url 'product_detail' cart_item.product.category.slug cart_item.product.slug %}" class="title text-dark stretched-link">{{ cart_item.product.brand_name }}</a>
-								<p class="text-muted small">{{ cart_item.product.product_name }} <br> {{ cart_item.product.description }}</p>
-							</figcaption>
-						</figure>
-					</td>
-					
-					<td>
-						<figure class="itemside align-items-center">
-							
-							<figcaption class="info">
-								<a href="{% url 'product_detail' cart_item.product.category.slug cart_item.product.slug %}" class="title text-dark ">
-									{% if cart_item.variation.all %}
-                                       {% for variant in cart_item.variation.all %}
-											{{ variant.variant_value }}
-										{% endfor %}
-									{% endif %}
-							</figcaption>
-						</figure>
-					</td>
-                    
-					<td>
-						<div class="input-group input-spinner">
-
-							<div class="input-group-prepend">
-							<a href="{% url 'decrement_cart_item' cart_item.id %}" class="btn btn-light">
-                            <i class="fa fa-minus"></i>
-                                </a>
-							</div>
-
-							<input type="text" class="form-control text-center"
-								value="{{ cart_item.quantity }}" readonly>
-
-							<div class="input-group-append">
-							<a href="{% url 'increment_cart_item' cart_item.id %}" class="btn btn-light"><i class="fa fa-plus"></i></a>
-							</div>
-
-						</div>
-					</td>
-
-
-					<td>
-						<div class="price-wrap">
-							<var class="price">₹{{ cart_item.sub_total }}</var>
-							<small class="text-muted">₹{{ cart_item.product.price }} each</small>
-						</div>
-					</td>
-
-					<td class="text-right">
-						<a href="{% url 'remove_cart' cart_item.id %}" class="btn btn-danger"> Remove</a>
-					</td>
-				</tr>
+            <td>
+                {% for v in cart_item.variation.all %}
+                    {{ v.variant_value }}
                 {% endfor %}
-			{% else %}
-				<tr>
-					<td colspan="4" class="text-center">
-						<h4>Your cart is empty.</h4>
-						<a href="{% url 'store' %}" class="btn btn-primary mt-3">Continue Shopping</a>
-					</td>
-				</tr>
-			{% endif %}
+            </td>
+
+            <td>
+                <div class="input-group input-spinner">
+                    <a href="{% url 'decrement_cart_item' cart_item.id %}" class="btn btn-light">−</a>
+                    <input type="text" class="form-control text-center" value="{{ cart_item.quantity }}" readonly>
+                    <a href="{% url 'increment_cart_item' cart_item.id %}" class="btn btn-light">+</a>
+                </div>
+            </td>
+
+            <td>
+                ₹{{ cart_item.sub_total }}
+            </td>
+
+            <td class="text-right">
+                <a href="{% url 'remove_cart' cart_item.id %}" class="btn btn-danger btn-sm">Remove</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</div>
+
+<!-- MOBILE CARDS -->
+<div class="d-block d-md-none">
+{% for cart_item in cart_items %}
+<div class="card mb-3 p-2">
+    <div class="d-flex gap-2">
+        <img src="{{ cart_item.product.image.url }}"
+             style="width:70px;height:70px;object-fit:cover"
+             class="rounded">
+
+        <div class="flex-grow-1">
+            <strong>{{ cart_item.product.product_name }}</strong>
+            <div class="text-muted small">
+                {% for v in cart_item.variation.all %}
+                    {{ v.variant_value }}
+                {% endfor %}
+            </div>
+
+            <div class="d-flex align-items-center mt-2">
+                <a href="{% url 'decrement_cart_item' cart_item.id %}" class="btn btn-light btn-sm">−</a>
+                <span class="mx-2">{{ cart_item.quantity }}</span>
+                <a href="{% url 'increment_cart_item' cart_item.id %}" class="btn btn-light btn-sm">+</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-2">
+        <strong>₹{{ cart_item.sub_total }}</strong>
+        <a href="{% url 'remove_cart' cart_item.id %}" class="btn btn-danger btn-sm">Remove</a>
+    </div>
+</div>
+{% endfor %}
+</div>
+
+{% else %}
+<div class="text-center p-4">
+    <h4>Your cart is empty</h4>
+    <a href="{% url 'store' %}" class="btn btn-primary mt-3">Continue Shopping</a>
+</div>
+{% endif %}
+
 
 				<!-- ITEM 2 -->
 				
@@ -105,10 +118,11 @@
 				</tbody>
 			</table>
 		</div>
-	</aside>
+	</div>
 
 	<!-- SUMMARY -->
-	<aside class="col-lg-3">
+	<div class="col-12 mt-4">
+
 		<div class="card">
 			<div class="card-body">
 				<form method="POST" action="{% url 'apply_coupon' %}">
@@ -167,7 +181,7 @@
 				<a href="{% url 'store' %}" class="btn btn-light btn-block">Continue Shopping</a>
 			</div>
 		</div>
-	</aside>
+	</div>
 
 </div>
 </div>
