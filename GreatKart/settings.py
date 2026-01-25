@@ -16,15 +16,15 @@ load_dotenv()
 # SECURITY
 # -------------------------------
 SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = True
   # set False on Render later
 
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    '.onrender.com',
-]
-
+# ALLOWED_HOSTS = [
+#     'localhost',
+#     '127.0.0.1',
+#     '.onrender.com',
+# ]
+ALLOWED_HOSTS = ["*"]
 # -------------------------------
 # APPLICATIONS
 # -------------------------------
@@ -173,3 +173,17 @@ PAYU_MERCHANT_KEY = os.getenv('PAYU_MERCHANT_KEY')
 PAYU_MERCHANT_SALT = os.getenv('PAYU_MERCHANT_SALT')
 PAYU_URL = os.getenv('PAYMENT_URL')
 PAYU_ENV = os.getenv('PAYU_ENV')
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "ERROR",
+    },
+}
