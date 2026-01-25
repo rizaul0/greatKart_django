@@ -11,7 +11,7 @@ from django.utils import timezone
 from django.utils.timezone import now
 from django.contrib.auth.decorators import login_required
 import random
-from utils.email import send_mail_async
+from utils.email import send_email_async
 from cart.models import Cart, CartItem
 from orders.models import Order
 from store.models import Product, Variant
@@ -130,7 +130,7 @@ def signin(request):
         request.session['otp_user_id'] = user.id
 
         # Send OTP email
-        send_mail_async(
+        send_email_async(
             subject="Your OTP for GreatKart Login",
             message=f"""
 Hello {user.first_name},
@@ -180,7 +180,7 @@ GreatKart Team
         user.save()
         login_time = timezone.localtime(timezone.now())
         # Send successful login email
-        send_mail_async(
+        send_email_async(
             subject="Successful Login – GreatKart",
             message=f"""
 Hello {user.first_name},
@@ -227,7 +227,7 @@ def forgot_password(request):
 
         reset_link = f"http://127.0.0.1:8000/reset-password/{token.token}/"
 
-        send_mail_async(
+        send_email_async(
             subject="Reset your GreatKart password",
             message=f"Click the link to reset your password:\n\n{reset_link}",
             from_email=settings.DEFAULT_FROM_EMAIL,
