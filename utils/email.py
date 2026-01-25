@@ -11,8 +11,8 @@ def send_email_async(subject, message, recipients):
                 subject=subject,
                 message=message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[recipients] if isinstance(recipients, str) else recipients,
-                fail_silently=True,
+                recipient_list=recipients,
+               
             )
         except Exception:
             pass
