@@ -16,7 +16,8 @@ load_dotenv()
 # SECURITY
 # -------------------------------
 SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = False   # set False on Render later
+DEBUG = os.getenv("DEBUG", "False") == "True"
+  # set False on Render later
 
 ALLOWED_HOSTS = [
     'localhost',
