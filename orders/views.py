@@ -7,7 +7,7 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 import uuid
-
+from orders.utils import generate_payu_hash
 from cart.models import Cart, CartItem
 from cart.views import _cart_id
 from coupons.models import Coupon
@@ -15,7 +15,7 @@ from coupons.utils import calculate_coupon_discount
 from orders.models import Order, OrderProduct
 from orders.utils import generate_invoice_pdf
 from utils.email import send_invoice_email_async
-from .utils import generate_payu_hash
+
 from django.core.mail import EmailMessage
 
 
