@@ -8,19 +8,29 @@ from django.conf import settings
 BREVO_API_URL = "https://api.brevo.com/v3/smtp/email"
 
 
+def _normalize_recipients(recipients):
+    """
+    Accepts:
+    - string email
+    - list/tuple of emails
+    Returns a clean list of emails
+    """
+    if isinstance(recipients, str):
+        return [recipients]
+    return [email for email in recipients if email]
+
+
 def send_email_async(subject, message, recipients):
-    """
-    Send a simple email using Brevo API (async).
-    recipients = list of email strings
-    """
     def task():
         try:
+            recipient_list = _normalize_recipients(recipients)
+
             payload = {
                 "sender": {
                     "name": "GreatKart",
                     "email": settings.DEFAULT_FROM_EMAIL,
                 },
-                "to": [{"email": email} for email in recipients],
+                "to": [{"email": email} for email in recipient_list],
                 "subject": subject,
                 "htmlContent": f"<p>{message}</p>",
             }
@@ -48,11 +58,12 @@ def send_email_async(subject, message, recipients):
 
 
 def send_invoice_email_async(order, pdf_buffer):
-    """
-    Send invoice email with PDF attachment using Brevo API.
-    """
     def task():
         try:
+            email = order.user.email
+            if not email:
+                return
+
             attachment = {
                 "content": base64.b64encode(pdf_buffer.getvalue()).decode(),
                 "name": f"Invoice_{order.order_number}.pdf",
@@ -63,9 +74,12 @@ def send_invoice_email_async(order, pdf_buffer):
                     "name": "GreatKart",
                     "email": settings.DEFAULT_FROM_EMAIL,
                 },
-                "to": [{"email": order.user.email}],
+                "to": [{"email": email}],
                 "subject": "Your GreatKart Invoice",
-                "htmlContent": "<p>Thank you for your order. Please find your invoice attached.</p>",
+                "htmlContent": (
+                    "<p>Thank you for your order. "
+                    "Please find your invoice attached.</p>"
+                ),
                 "attachment": [attachment],
             }
 
