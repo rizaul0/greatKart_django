@@ -231,7 +231,8 @@ def forgot_password(request):
             subject="Reset your GreatKart password",
             message=f"Click the link to reset your password:\n\n{reset_link}",
             
-            recipients=[email],
+            recipients=email,
+
         )
 
         messages.success(request, "Password reset link sent to your email")
