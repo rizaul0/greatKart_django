@@ -146,7 +146,7 @@ If you did not try to log in, please ignore this email.
 Regards,
 GreatKart Team
 """,
-            from_email=settings.DEFAULT_FROM_EMAIL,
+           
             recipients=[user.email],
             fail_silently=False,
         )
@@ -195,7 +195,7 @@ If this was not you, please reset your password immediately.
 Regards,
 GreatKart Team
 """,
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            
             recipients=[user.email],
             fail_silently=False,
         )
