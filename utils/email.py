@@ -11,13 +11,13 @@ def send_email_async(subject, message, recipients):
                 subject=subject,
                 message=message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[recipients],
-                fail_silently=True,  # IMPORTANT
+                recipient_list=[recipients] if isinstance(recipients, str) else recipients,
+                fail_silently=True,
             )
         except Exception:
-            pass  # Never crash the request
+            pass
 
-    threading.Thread(target=task).start()
+    threading.Thread(target=task, daemon=True).start()
 
 
 
