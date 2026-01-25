@@ -12,7 +12,9 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,14 +22,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
+load_dotenv()
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-51o96vg7_)km)3w$mgm0z6r0xusmnrjjb(&g760)tji@n+=#*v'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '.onrender.com',
+]
+
+
+
 
 DEFAULT_DOMAIN = '127.0.0.1:8000'
 
@@ -50,6 +59,8 @@ INSTALLED_APPS = [
     "orders",
     'owneradmin',
     'coupons',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 SITE_ID = 1
 MIDDLEWARE = [
@@ -93,10 +104,15 @@ AUTH_USER_MODEL = 'accounts.Account'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
+
 
 
 # Password validation
@@ -137,13 +153,15 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'GreatKart' / 'static',
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+# settings.py
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR / 'media'
 
 # ================= EMAIL CONFIGURATION =================
-load_dotenv()
+
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -163,3 +181,10 @@ PAYU_MERCHANT_KEY = os.getenv('PAYU_MERCHANT_KEY')
 PAYU_MERCHANT_SALT = os.getenv('PAYU_MERCHANT_SALT')
 PAYU_URL = os.getenv('PAYMENT_URL')
 PAYU_ENV = os.getenv('PAYU_ENV')
+
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+}
