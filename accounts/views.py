@@ -147,8 +147,8 @@ Regards,
 GreatKart Team
 """,
            
-            recipients=[user.email],
-            fail_silently=False,
+            recipients=user.email
+        
         )
 
         messages.success(request, "OTP sent to your email")
@@ -196,8 +196,8 @@ Regards,
 GreatKart Team
 """,
             
-            recipients=user.email,
-            fail_silently=False,
+            recipients=user.email
+            
         )
 
         # Clean session
