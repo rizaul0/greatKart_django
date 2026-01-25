@@ -21,6 +21,35 @@ def _normalize_recipients(recipients):
 
 
 def send_email_async(subject, message, recipients):
+    if isinstance(recipients, str):
+        recipients = [recipients]
+
+    payload = {
+        "sender": {
+            "name": "GreatKart",
+            "email": settings.DEFAULT_FROM_EMAIL,
+        },
+        "to": [{"email": email} for email in recipients],
+        "subject": subject,
+        "htmlContent": f"<p>{message}</p>",
+    }
+
+    headers = {
+        "api-key": settings.BREVO_API_KEY,
+        "Content-Type": "application/json",
+        "accept": "application/json",
+    }
+
+    response = requests.post(
+        "https://api.brevo.com/v3/smtp/email",
+        json=payload,
+        headers=headers,
+        timeout=15,
+    )
+
+    print("BREVO STATUS:", response.status_code)
+    print("BREVO RESPONSE:", response.text)
+
     def task():
         try:
             recipient_list = _normalize_recipients(recipients)
