@@ -230,7 +230,7 @@ def forgot_password(request):
         send_email_async(
             subject="Reset your GreatKart password",
             message=f"Click the link to reset your password:\n\n{reset_link}",
-            from_email=settings.DEFAULT_FROM_EMAIL,
+            
             recipients=[email],
         )
 
