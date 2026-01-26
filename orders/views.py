@@ -126,7 +126,7 @@ def payu_redirect(request):
     order_id = request.session.get("pending_order_id")
     order = get_object_or_404(Order, id=order_id, is_ordered=False)
 
-    txnid = str(uuid.uuid4())[:20]
+    txnid = order.order_number
 
     payu_data = {
         "key": settings.PAYU_MERCHANT_KEY,
@@ -166,14 +166,14 @@ def payu_success(request):
     status = request.POST.get("status")
     txnid = request.POST.get("txnid")
     email = request.POST.get("email")
-    order_id = request.POST.get("udf1")  # ✅ VERY IMPORTANT
+     # ✅ VERY IMPORTANT
 
     if status != "success":
         return redirect("cart")
 
     order = get_object_or_404(
         Order,
-        id=order_id,
+        order_number=txnid,
         is_ordered=False
     )
 
@@ -215,7 +215,7 @@ def payu_success(request):
     order.save()
 
     cart_items.delete()
-
+    request.session.pop("pending_order_id", None)
     # Invoice email
     pdf = generate_invoice_pdf(order, OrderProduct.objects.filter(order=order))
     send_invoice_email_async(order, pdf)
