@@ -31,6 +31,7 @@ def register(request):
         confirm_password = request.POST['confirm_password']
         city = request.POST['city']
         zip = request.POST['zip']
+        state = request.POST['state']
         country = request.POST['country']
         gender = request.POST.get('gender', 'M')
         phone = request.POST['phone']
@@ -58,6 +59,7 @@ def register(request):
         )
 
         user.city = city
+        user.state = state
         user.street = street
         user.house = house
         user.country = country
