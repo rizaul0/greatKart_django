@@ -156,12 +156,9 @@ def payu_redirect(request):
 
 
 # ========================= PAYU SUCCESS =========================
-from django.db import transaction
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
-from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
+@transaction.atomic
 def payu_success(request):
     if request.method != "POST":
         return HttpResponse("Invalid request", status=400)
@@ -169,74 +166,58 @@ def payu_success(request):
     status = request.POST.get("status")
     txnid = request.POST.get("txnid")
     email = request.POST.get("email")
+    order_id = request.POST.get("udf1")  # ✅ VERY IMPORTANT
 
     if status != "success":
         return redirect("cart")
 
-    with transaction.atomic():
-        # 🔒 Lock order row to prevent double processing
-        order = (
-            Order.objects
-            .select_for_update()
-            .filter(user__email=email, is_ordered=False)
-            .last()
+    order = get_object_or_404(
+        Order,
+        id=order_id,
+        is_ordered=False
+    )
+
+    cart = Cart.objects.filter(user=order.user).first()
+    if not cart:
+        return HttpResponse("Cart not found", status=404)
+
+    cart_items = CartItem.objects.filter(cart=cart)
+    if not cart_items.exists():
+        return HttpResponse("No cart items found", status=400)
+
+    for item in cart_items:
+        color = ""
+        size = ""
+        for v in item.variation.all():
+            if v.variant_category == "color":
+                color = v.variant_value
+            elif v.variant_category == "size":
+                size = v.variant_value
+
+        OrderProduct.objects.create(
+            order=order,
+            user=order.user,
+            product=item.product,
+            color=color,
+            size=size,
+            quantity=item.quantity,
+            product_price=item.product.price,
+            ordered=True,
         )
 
-        if not order:
-            return HttpResponse("Order not found", status=404)
+        item.product.stock -= item.quantity
+        item.product.save()
 
-        cart_id = request.session.get("order_cart_id")
-        if not cart_id:
-            return HttpResponse("Cart not found", status=404)
+    order.transaction_id = txnid
+    order.payment_method = "PayU"
+    order.is_ordered = True
+    order.status = "New"
+    order.save()
 
-        cart = get_object_or_404(Cart, cart_id=cart_id)
-        cart_items = CartItem.objects.select_related("product").filter(cart=cart)
+    cart_items.delete()
 
-        if not cart_items.exists():
-            return HttpResponse("No cart items found", status=400)
-
-        # ✅ Create OrderProduct entries
-        for item in cart_items:
-            color = ""
-            size = ""
-            for v in item.variation.all():
-                if v.variant_category == "color":
-                    color = v.variant_value
-                elif v.variant_category == "size":
-                    size = v.variant_value
-
-            OrderProduct.objects.create(
-                order=order,
-                user=order.user,
-                product=item.product,
-                color=color,
-                size=size,
-                quantity=item.quantity,
-                product_price=item.product.price,
-                ordered=True,
-            )
-
-            # ✅ Update stock safely
-            item.product.stock -= item.quantity
-            item.product.save()
-
-        # ✅ Finalize order
-        order.transaction_id = txnid
-        order.payment_method = "PayU"
-        order.is_ordered = True
-        order.status = "New"
-        order.save()
-
-        # ✅ Clear cart
-        cart_items.delete()
-
-        # ✅ Clear session references
-        request.session.pop("pending_order_id", None)
-        request.session.pop("order_cart_id", None)
-
-    # 📧 SEND EMAIL AFTER TRANSACTION COMMIT (IMPORTANT)
-    order_products = OrderProduct.objects.filter(order=order)
-    pdf = generate_invoice_pdf(order, order_products)
+    # Invoice email
+    pdf = generate_invoice_pdf(order, OrderProduct.objects.filter(order=order))
     send_invoice_email_async(order, pdf)
 
     return redirect(f"/orders/order_complete/?order_id={order.id}")
