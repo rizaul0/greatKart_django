@@ -6,20 +6,20 @@ from decimal import Decimal, ROUND_HALF_UP
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
-import uuid
-from orders.utils import generate_payu_hash
+from django.db import transaction
+
 from cart.models import Cart, CartItem
 from cart.views import _cart_id
 from coupons.models import Coupon
 from coupons.utils import calculate_coupon_discount
 from orders.models import Order, OrderProduct
-from orders.utils import generate_invoice_pdf
+from orders.utils import generate_invoice_pdf, generate_payu_hash
 from utils.email import send_invoice_email_async
-from django.db import transaction
 
 
 # ========================= PLACE ORDER =========================
 @login_required(login_url="signin")
+@transaction.atomic
 def place_order(request):
     cart = get_object_or_404(Cart, cart_id=_cart_id(request))
     cart_items = CartItem.objects.filter(cart=cart, is_active=True)
@@ -29,6 +29,7 @@ def place_order(request):
         return redirect("store")
 
     total_price = sum(item.sub_total() for item in cart_items)
+
     coupon = None
     discount = Decimal("0.00")
     if "coupon_id" in request.session:
@@ -41,7 +42,6 @@ def place_order(request):
     )
     grand_total = total_price - discount + tax
 
-    # CREATE PENDING ORDER
     order = Order.objects.create(
         user=request.user,
         order_number=f"GK{int(timezone.now().timestamp())}",
@@ -54,28 +54,7 @@ def place_order(request):
         ip=request.META.get("REMOTE_ADDR"),
     )
 
-    request.session["pending_order_id"] = order.id
-    request.session["order_cart_id"] = cart.cart_id
-    return render(request, "place-order.html", {
-        "cart_items": cart_items,
-        "total_price": total_price,
-        "discount": discount,
-        "coupon": coupon,
-        "tax": tax,
-        "grand_total": grand_total,
-        "order": order,
-    })
-
-
-# ========================= COD CONFIRM =========================
-@login_required(login_url="signin")
-def cod_confirm(request):
-    order_id = request.session.get("pending_order_id")
-    order = get_object_or_404(Order, id=order_id, is_ordered=False)
-
-    cart = Cart.objects.get(cart_id=_cart_id(request))
-    cart_items = CartItem.objects.filter(cart=cart)
-
+    # ✅ SAVE CART ITEMS INTO ORDER (IMPORTANT FIX)
     for item in cart_items:
         color = ""
         size = ""
@@ -93,8 +72,34 @@ def cod_confirm(request):
             size=size,
             quantity=item.quantity,
             product_price=item.product.price,
-            ordered=True,
+            ordered=False,   # 👈 NOT PAID YET
         )
+
+    request.session["pending_order_id"] = order.id
+
+    return render(request, "place-order.html", {
+        "cart_items": cart_items,
+        "total_price": total_price,
+        "discount": discount,
+        "coupon": coupon,
+        "tax": tax,
+        "grand_total": grand_total,
+        "order": order,
+    })
+
+
+# ========================= COD CONFIRM =========================
+@login_required(login_url="signin")
+@transaction.atomic
+def cod_confirm(request):
+    order_id = request.session.get("pending_order_id")
+    order = get_object_or_404(Order, id=order_id, is_ordered=False)
+
+    order_products = OrderProduct.objects.filter(order=order)
+
+    for item in order_products:
+        item.ordered = True
+        item.save()
 
         item.product.stock -= item.quantity
         item.product.save()
@@ -104,15 +109,12 @@ def cod_confirm(request):
     order.status = "New"
     order.save()
 
-    cart_items.delete()
+    # Clear cart
+    CartItem.objects.filter(cart__cart_id=_cart_id(request)).delete()
+    request.session.pop("pending_order_id", None)
 
-    # SEND EMAIL
-    order_products = OrderProduct.objects.filter(order=order)
     pdf = generate_invoice_pdf(order, order_products)
-
     send_invoice_email_async(order, pdf)
-
-    del request.session["pending_order_id"]
 
     return redirect(f"/orders/order_complete/?order_id={order.id}")
 
@@ -126,21 +128,14 @@ def payu_redirect(request):
     order_id = request.session.get("pending_order_id")
     order = get_object_or_404(Order, id=order_id, is_ordered=False)
 
-    txnid = order.order_number
-
     payu_data = {
         "key": settings.PAYU_MERCHANT_KEY,
-        "txnid": txnid,
+        "txnid": order.order_number,  # ✅ SAFE
         "amount": f"{order.order_total:.2f}",
         "productinfo": "GreatKart Order",
         "firstname": order.user.first_name.lower(),
         "email": order.user.email.lower(),
         "phone": order.user.phone,
-        "udf1": "",
-        "udf2": "",
-        "udf3": "",
-        "udf4": "",
-        "udf5": "",
         "surl": request.build_absolute_uri("/orders/payu/success/"),
         "furl": request.build_absolute_uri("/orders/payu/failure/"),
     }
@@ -156,7 +151,6 @@ def payu_redirect(request):
 
 
 # ========================= PAYU SUCCESS =========================
-
 @csrf_exempt
 @transaction.atomic
 def payu_success(request):
@@ -165,8 +159,6 @@ def payu_success(request):
 
     status = request.POST.get("status")
     txnid = request.POST.get("txnid")
-    email = request.POST.get("email")
-     # ✅ VERY IMPORTANT
 
     if status != "success":
         return redirect("cart")
@@ -177,47 +169,21 @@ def payu_success(request):
         is_ordered=False
     )
 
-    cart = Cart.objects.filter(user=order.user).first()
-    if not cart:
-        return HttpResponse("Cart not found", status=404)
+    order_products = OrderProduct.objects.filter(order=order)
 
-    cart_items = CartItem.objects.filter(cart=cart)
-    if not cart_items.exists():
-        return HttpResponse("No cart items found", status=400)
-
-    for item in cart_items:
-        color = ""
-        size = ""
-        for v in item.variation.all():
-            if v.variant_category == "color":
-                color = v.variant_value
-            elif v.variant_category == "size":
-                size = v.variant_value
-
-        OrderProduct.objects.create(
-            order=order,
-            user=order.user,
-            product=item.product,
-            color=color,
-            size=size,
-            quantity=item.quantity,
-            product_price=item.product.price,
-            ordered=True,
-        )
+    for item in order_products:
+        item.ordered = True
+        item.save()
 
         item.product.stock -= item.quantity
         item.product.save()
 
-    order.transaction_id = txnid
-    order.payment_method = "PayU"
+    order.payment_method = "PAYU"
     order.is_ordered = True
     order.status = "New"
     order.save()
 
-    cart_items.delete()
-    request.session.pop("pending_order_id", None)
-    # Invoice email
-    pdf = generate_invoice_pdf(order, OrderProduct.objects.filter(order=order))
+    pdf = generate_invoice_pdf(order, order_products)
     send_invoice_email_async(order, pdf)
 
     return redirect(f"/orders/order_complete/?order_id={order.id}")
@@ -238,7 +204,6 @@ def order_complete(request):
     return render(request, "order_complete.html", {
         "order": order,
         "ordered_products": OrderProduct.objects.filter(order=order),
-
         "total_price": order.order_total,
         "tax": order.tax,
         "grand_total": order.order_total,
