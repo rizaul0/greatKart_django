@@ -1,3 +1,6 @@
+from cart.models import Cart, CartItem
+from cart.views import _cart_id
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -15,6 +18,29 @@ from coupons.utils import calculate_coupon_discount
 from orders.models import Order, OrderProduct
 from orders.utils import generate_invoice_pdf, generate_payu_hash
 from utils.email import send_invoice_email_async
+
+
+def clear_cart_and_coupon(request, user=None):
+    """
+    Clears cart items, cart object, and applied coupon.
+    Works for both session-based and user-based carts.
+    """
+    # Clear session cart
+    if request:
+        cart_id = _cart_id(request)
+        CartItem.objects.filter(cart__cart_id=cart_id).delete()
+        Cart.objects.filter(cart_id=cart_id).delete()
+
+        # Remove coupon + pending order
+        request.session.pop("coupon_id", None)
+        request.session.pop("pending_order_id", None)
+
+    # Clear user cart (PayU safety)
+    if user:
+        CartItem.objects.filter(cart__user=user).delete()
+        Cart.objects.filter(user=user).delete()
+
+
 
 
 # ========================= PLACE ORDER =========================
@@ -54,7 +80,7 @@ def place_order(request):
         ip=request.META.get("REMOTE_ADDR"),
     )
 
-    # ✅ SAVE CART ITEMS INTO ORDER (IMPORTANT FIX)
+    # 🔒 Freeze cart items into order
     for item in cart_items:
         color = ""
         size = ""
@@ -72,7 +98,7 @@ def place_order(request):
             size=size,
             quantity=item.quantity,
             product_price=item.product.price,
-            ordered=False,   # 👈 NOT PAID YET
+            ordered=False,
         )
 
     request.session["pending_order_id"] = order.id
@@ -109,9 +135,8 @@ def cod_confirm(request):
     order.status = "New"
     order.save()
 
-    # Clear cart
-    CartItem.objects.filter(cart__cart_id=_cart_id(request)).delete()
-    request.session.pop("pending_order_id", None)
+    # 🧹 Clear cart + coupon
+    clear_cart_and_coupon(request)
 
     pdf = generate_invoice_pdf(order, order_products)
     send_invoice_email_async(order, pdf)
@@ -130,7 +155,7 @@ def payu_redirect(request):
 
     payu_data = {
         "key": settings.PAYU_MERCHANT_KEY,
-        "txnid": order.order_number,  # ✅ SAFE
+        "txnid": order.order_number,
         "amount": f"{order.order_total:.2f}",
         "productinfo": "GreatKart Order",
         "firstname": order.user.first_name.lower(),
@@ -182,6 +207,9 @@ def payu_success(request):
     order.is_ordered = True
     order.status = "New"
     order.save()
+
+    # 🧹 Clear cart + coupon (PayU-safe)
+    clear_cart_and_coupon(request=None, user=order.user)
 
     pdf = generate_invoice_pdf(order, order_products)
     send_invoice_email_async(order, pdf)
