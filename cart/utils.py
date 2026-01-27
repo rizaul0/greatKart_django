@@ -8,3 +8,7 @@ def cart_id(request):
     if not cart:
         cart = request.session.create()
     return cart
+
+# cart/utils.py (or anywhere reusable)
+
+

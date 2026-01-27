@@ -4,6 +4,9 @@ from reportlab.pdfgen import canvas
 from io import BytesIO
 from decimal import Decimal
 import hashlib
+from cart.models import Cart, CartItem
+
+
 PRIMARY = HexColor("#2f4f6f")
 
 def generate_invoice_pdf(order, order_products):
@@ -151,3 +154,10 @@ def generate_payu_hash(data, salt):
     # print("PAYU HASH STRING (FIXED):", hash_string)
 
     return hashlib.sha512(hash_string.encode("utf-8")).hexdigest().lower()
+
+
+def clear_user_cart(user):
+    cart = Cart.objects.filter(user=user).first()
+    if cart:
+        CartItem.objects.filter(cart=cart).delete()
+        cart.delete()

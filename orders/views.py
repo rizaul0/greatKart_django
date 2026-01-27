@@ -16,7 +16,7 @@ from cart.views import _cart_id
 from coupons.models import Coupon
 from coupons.utils import calculate_coupon_discount
 from orders.models import Order, OrderProduct
-from orders.utils import generate_invoice_pdf, generate_payu_hash
+from orders.utils import clear_user_cart, generate_invoice_pdf, generate_payu_hash
 from utils.email import send_invoice_email_async
 
 
@@ -176,6 +176,7 @@ def payu_redirect(request):
 
 
 # ========================= PAYU SUCCESS =========================
+
 @csrf_exempt
 @transaction.atomic
 def payu_success(request):
@@ -184,34 +185,64 @@ def payu_success(request):
 
     status = request.POST.get("status")
     txnid = request.POST.get("txnid")
+    email = request.POST.get("email")
 
     if status != "success":
         return redirect("cart")
 
-    order = get_object_or_404(
-        Order,
-        order_number=txnid,
+    # 🔥 Find order safely (no session dependency)
+    order = Order.objects.filter(
+        user__email=email,
         is_ordered=False
-    )
+    ).last()
 
-    order_products = OrderProduct.objects.filter(order=order)
+    if not order:
+        return HttpResponse("Order not found", status=404)
 
-    for item in order_products:
-        item.ordered = True
-        item.save()
+    # 🔁 Create OrderProducts from cart
+    cart = Cart.objects.filter(user=order.user).first()
+    if not cart:
+        return HttpResponse("Cart not found", status=404)
+
+    cart_items = CartItem.objects.filter(cart=cart)
+    if not cart_items.exists():
+        return HttpResponse("No cart items found", status=400)
+
+    for item in cart_items:
+        color = ""
+        size = ""
+        for v in item.variation.all():
+            if v.variant_category == "color":
+                color = v.variant_value
+            elif v.variant_category == "size":
+                size = v.variant_value
+
+        OrderProduct.objects.create(
+            order=order,
+            user=order.user,
+            product=item.product,
+            color=color,
+            size=size,
+            quantity=item.quantity,
+            product_price=item.product.price,
+            ordered=True,
+        )
 
         item.product.stock -= item.quantity
         item.product.save()
 
+    # ✅ Mark order paid
+    order.transaction_id = txnid
     order.payment_method = "PAYU"
     order.is_ordered = True
     order.status = "New"
     order.save()
 
-    # 🧹 Clear cart + coupon (PayU-safe)
-    clear_cart_and_coupon(request=None, user=order.user)
+    # 🔥 THIS WAS MISSING
+    clear_user_cart(order.user)
 
-    pdf = generate_invoice_pdf(order, order_products)
+    # 📧 Invoice email
+    pdf = generate_invoice_pdf(order, order.items.all())
     send_invoice_email_async(order, pdf)
 
     return redirect(f"/orders/order_complete/?order_id={order.id}")
