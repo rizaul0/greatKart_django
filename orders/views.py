@@ -29,8 +29,7 @@ def clear_cart_and_coupon(request, user=None):
     if request:
         cart_id = _cart_id(request)
         CartItem.objects.filter(cart__cart_id=cart_id).delete()
-        Cart.objects.filter(cart_id=cart_id).delete()
-
+       
         # Remove coupon + pending order
         request.session.pop("coupon_id", None)
         request.session.pop("pending_order_id", None)
@@ -209,7 +208,11 @@ def payu_success(request):
     order.is_ordered = True
     order.save()
 
-    clear_cart_and_coupon(None, user=order.user)
+    # ✅ FIX: clear cart ITEMS only (do NOT delete cart)
+    CartItem.objects.filter(cart__user=order.user).delete()
+
+    # also clear coupon if exists
+    Coupon.objects.filter(id=order.coupon_id).update(is_active=False) if order.coupon else None
 
     pdf = generate_invoice_pdf(order, order_products)
     send_invoice_email_async(order, pdf)
