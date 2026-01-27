@@ -118,10 +118,13 @@ def place_order(request):
 @login_required(login_url="signin")
 @transaction.atomic
 def cod_confirm(request):
-    order_id = request.session.get("pending_order_id")
-    order = get_object_or_404(Order, id=order_id, is_ordered=False)
+    order = get_object_or_404(
+        Order,
+        id=request.session.get("pending_order_id"),
+        is_ordered=False
+    )
 
-    order_products = OrderProduct.objects.filter(order=order)
+    order_products = order.items.all()
 
     for item in order_products:
         item.ordered = True
@@ -132,10 +135,8 @@ def cod_confirm(request):
 
     order.payment_method = "COD"
     order.is_ordered = True
-    order.status = "New"
     order.save()
 
-    # 🧹 Clear cart + coupon
     clear_cart_and_coupon(request)
 
     pdf = generate_invoice_pdf(order, order_products)
@@ -183,70 +184,37 @@ def payu_success(request):
     if request.method != "POST":
         return HttpResponse("Invalid request", status=400)
 
-    status = request.POST.get("status")
-    txnid = request.POST.get("txnid")
-    email = request.POST.get("email")
-
-    if status != "success":
+    if request.POST.get("status") != "success":
         return redirect("cart")
 
-    # 🔥 Find order safely (no session dependency)
     order = Order.objects.filter(
-        user__email=email,
+        user__email=request.POST.get("email"),
         is_ordered=False
     ).last()
 
     if not order:
         return HttpResponse("Order not found", status=404)
 
-    # 🔁 Create OrderProducts from cart
-    cart = Cart.objects.filter(user=order.user).first()
-    if not cart:
-        return HttpResponse("Cart not found", status=404)
+    order_products = order.items.all()
 
-    cart_items = CartItem.objects.filter(cart=cart)
-    if not cart_items.exists():
-        return HttpResponse("No cart items found", status=400)
-
-    for item in cart_items:
-        color = ""
-        size = ""
-        for v in item.variation.all():
-            if v.variant_category == "color":
-                color = v.variant_value
-            elif v.variant_category == "size":
-                size = v.variant_value
-
-        OrderProduct.objects.create(
-            order=order,
-            user=order.user,
-            product=item.product,
-            color=color,
-            size=size,
-            quantity=item.quantity,
-            product_price=item.product.price,
-            ordered=True,
-        )
+    for item in order_products:
+        item.ordered = True
+        item.save()
 
         item.product.stock -= item.quantity
         item.product.save()
 
-    # ✅ Mark order paid
-    order.transaction_id = txnid
+    order.transaction_id = request.POST.get("txnid")
     order.payment_method = "PAYU"
     order.is_ordered = True
-    order.status = "New"
     order.save()
 
-    # 🔥 THIS WAS MISSING
-    clear_user_cart(order.user)
+    clear_cart_and_coupon(None, user=order.user)
 
-    # 📧 Invoice email
-    pdf = generate_invoice_pdf(order, order.items.all())
+    pdf = generate_invoice_pdf(order, order_products)
     send_invoice_email_async(order, pdf)
 
     return redirect(f"/orders/order_complete/?order_id={order.id}")
-
 
 # ========================= ORDER COMPLETE =========================
 @login_required(login_url="signin")
