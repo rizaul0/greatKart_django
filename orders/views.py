@@ -24,22 +24,26 @@ def clear_cart_and_coupon(request, user=None):
     """
     Clears cart items, cart object, and applied coupon.
     Works for both session-based and user-based carts.
+
+    NOTE: Cart.user is never set in this codebase — carts are identified
+    purely by cart_id = "user_{user.id}" for logged-in users.
+    We must filter by cart__cart_id, NOT cart__user.
     """
-    # Clear session cart
+    # Clear session cart (when request context is available)
     if request:
         cart_id = _cart_id(request)
         CartItem.objects.filter(cart__cart_id=cart_id).delete()
-       
-        # Remove coupon + pending order
+
+        # Remove coupon + pending order from session
         request.session.pop("coupon_id", None)
         request.session.pop("pending_order_id", None)
 
-    # Clear user cart (PayU safety)
+    # ✅ FIX: For PayU callback, request.user is anonymous so we receive
+    # the user object directly. Build the cart_id the same way _cart_id()
+    # does for authenticated users: "user_{user.id}"
     if user:
-        CartItem.objects.filter(cart__user=user).delete()
-        Cart.objects.filter(user=user).delete()
-
-
+        cart_id = f"user_{user.id}"
+        CartItem.objects.filter(cart__cart_id=cart_id).delete()
 
 
 # ========================= PLACE ORDER =========================
@@ -208,16 +212,22 @@ def payu_success(request):
     order.is_ordered = True
     order.save()
 
-    # ✅ FIX: clear cart ITEMS only (do NOT delete cart)
-    CartItem.objects.filter(cart__user=order.user).delete()
+    # ✅ FIX: Cart.user is never set in this codebase — carts are keyed by
+    # cart_id = "user_{user.id}" (see cart/views.py _cart_id()).
+    # Using cart__user=order.user always matched ZERO rows (user field is NULL).
+    # We must look up by cart_id instead.
+    cart_id = f"user_{order.user.id}"
+    CartItem.objects.filter(cart__cart_id=cart_id).delete()
 
-    # also clear coupon if exists
-    Coupon.objects.filter(id=order.coupon_id).update(is_active=False) if order.coupon else None
+    # Deactivate coupon if one was used on this order
+    if order.coupon:
+        Coupon.objects.filter(id=order.coupon_id).update(is_active=False)
 
     pdf = generate_invoice_pdf(order, order_products)
     send_invoice_email_async(order, pdf)
 
     return redirect(f"/orders/order_complete/?order_id={order.id}")
+
 
 # ========================= ORDER COMPLETE =========================
 @login_required(login_url="signin")

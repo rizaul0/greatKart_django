@@ -87,8 +87,8 @@
           <td class="text-center">{{ item.quantity }}</td>
           <td class="text-center">₹{{ item.product_price }}</td>
           <td class="text-center">
-            ₹{{ item.quantity|floatformat:0|add:0|floatformat:0 }}
-            ₹{{ item.product_price }} × {{ item.quantity }}
+            Q{{ item.quantity|floatformat:0|add:0|floatformat:0 }}
+             ₹{{ item.product_price }} × {{ item.quantity }}
 
           </td>
         </tr>
